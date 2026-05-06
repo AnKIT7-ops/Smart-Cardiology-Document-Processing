@@ -1,0 +1,44 @@
+2026-05-06 15:02:57,449 [INFO] Database ready: smart_cardiology.db
+2026-05-06 15:06:05,999 [INFO] Database ready: smart_cardiology.db
+2026-05-06 15:06:05,999 [INFO] No saved model found – will train on first use.
+2026-05-06 15:06:07,411 [INFO] Generating synthetic training data …
+2026-05-06 15:06:08,500 [ERROR] Training error: main thread is not in main loop
+2026-05-06 15:10:33,429 [INFO] Database ready: smart_cardiology.db
+2026-05-06 15:10:33,429 [INFO] No saved model found – will train on first use.
+2026-05-06 15:10:34,446 [INFO] Generating synthetic training data …
+2026-05-06 15:10:35,542 [ERROR] Training error: main thread is not in main loop
+2026-05-06 19:59:22,044 [INFO] Database ready: smart_cardiology.db
+2026-05-06 19:59:22,044 [INFO] No saved model found – will train on first use.
+2026-05-06 19:59:23,170 [INFO] Generating synthetic training data …
+2026-05-06 19:59:24,263 [ERROR] Training error: main thread is not in main loop
+2026-05-06 20:00:05,079 [INFO] Training model …
+2026-05-06 20:00:05,079 [INFO] Generating synthetic training data …
+2026-05-06 20:00:13,482 [INFO] Training model …
+2026-05-06 20:00:13,483 [INFO] Generating synthetic training data …
+2026-05-06 20:00:34,532 [INFO] Model saved: ecg_model.pkl
+2026-05-06 20:00:34,533 [INFO] Training complete. CV Accuracy=1.000
+2026-05-06 20:00:34,554 [INFO] Saved analysis #7: Normal Sinus Rhythm
+2026-05-06 20:00:47,920 [INFO] Model saved: ecg_model.pkl
+2026-05-06 20:00:47,920 [INFO] Training complete. CV Accuracy=1.000
+2026-05-06 20:00:47,935 [INFO] Saved analysis #8: Atrial Fibrillation
+2026-05-06 20:05:08,969 [INFO] Database ready: smart_cardiology.db
+2026-05-06 20:05:09,025 [INFO] Model loaded: ecg_model.pkl v1.0.0-GBT
+2026-05-06 20:05:31,341 [INFO] Saved analysis #9: Normal Sinus Rhythm
+2026-05-06 20:05:41,659 [INFO] Exported 9 records to C:/Users/adars/OneDrive/AppData/Desktop/Kakunje/mod2part2/data/ecg_analyses.csv
+2026-05-06 20:05:50,119 [INFO] PDF report saved: C:/Users/adars/OneDrive/AppData/Desktop/Kakunje/mod2part2/data/ECG_Report_PAT-001.pdf
+2026-05-06 20:07:05,062 [INFO] Database ready: smart_cardiology.db
+2026-05-06 20:07:05,084 [INFO] Model loaded: ecg_model.pkl v1.0.0-GBT
+2026-05-06 20:07:18,068 [INFO] Saved analysis #10: Normal Sinus Rhythm
+2026-05-06 20:32:49,693 [INFO] Database ready: smart_cardiology.db
+2026-05-06 20:32:49,724 [INFO] Model loaded: ecg_model.pkl v1.0.0-GBT
+2026-05-06 20:32:56,700 [INFO] Saved analysis #11: Normal Sinus Rhythm
+2026-05-06 20:33:00,253 [INFO] Saved analysis #12: Myocardial Infarction
+2026-05-06 21:18:50,061 [INFO] Database ready: C:\Users\adars\OneDrive\AppData\Desktop\Kakunje\ankitlund\Smart-Cardiology-Document-Processing\smart_cardiology.db
+2026-05-06 21:18:50,088 [INFO] Model loaded: C:\Users\adars\OneDrive\AppData\Desktop\Kakunje\ankitlund\Smart-Cardiology-Document-Processing\ecg analysis\ecg_model.pkl v1.0.0-GBT
+2026-05-06 21:18:50,124 [INFO] Saved ECG result ECG-0001: Normal Sinus Rhythm
+2026-05-06 21:24:50,752 [INFO] Database ready: c:\Users\adars\OneDrive\AppData\Desktop\Kakunje\ankitlund\Smart-Cardiology-Document-Processing\smart_cardiology.db
+2026-05-06 21:24:50,774 [INFO] Model loaded: c:\Users\adars\OneDrive\AppData\Desktop\Kakunje\ankitlund\Smart-Cardiology-Document-Processing\ecg analysis\ecg_model.pkl v1.0.0-GBT
+2026-05-06 21:25:04,961 [INFO] Saved ECG result ECG-0002: Normal Sinus Rhythm
+2026-05-06 21:25:35,173 [INFO] Exported 2 records to C:/Users/adars/OneDrive/AppData/Desktop/Kakunje/ankitlund/Smart-Cardiology-Document-Processing/tbl_ecg_data.csv
+2026-05-06 21:26:40,000 [INFO] Saved ECG result ECG-0003: Ventricular Tachycardia
+2026-05-06 21:26:54,991 [INFO] PDF report saved: C:/Users/adars/OneDrive/AppData/Desktop/Kakunje/mod2part2/ECG_Report_P-0001.pdf
