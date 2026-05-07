@@ -4,7 +4,7 @@ import datetime
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
-from main import UploadMeta, run_pipeline
+from main import UploadMeta, run_pipeline  
 from database import DatabaseWrapper
 
 
