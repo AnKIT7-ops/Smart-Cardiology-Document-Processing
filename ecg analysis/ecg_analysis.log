@@ -42,3 +42,5 @@
 2026-05-06 21:25:35,173 [INFO] Exported 2 records to C:/Users/adars/OneDrive/AppData/Desktop/Kakunje/ankitlund/Smart-Cardiology-Document-Processing/tbl_ecg_data.csv
 2026-05-06 21:26:40,000 [INFO] Saved ECG result ECG-0003: Ventricular Tachycardia
 2026-05-06 21:26:54,991 [INFO] PDF report saved: C:/Users/adars/OneDrive/AppData/Desktop/Kakunje/mod2part2/ECG_Report_P-0001.pdf
+2026-05-07 00:29:21,203 [INFO] Database ready: C:\Users\ASUS\OneDrive\Desktop\smartcardio\smart_cardiology.db
+2026-05-07 00:29:21,383 [INFO] Model loaded: C:\Users\ASUS\OneDrive\Desktop\smartcardio\ecg analysis\ecg_model.pkl v1.0.0-GBT
