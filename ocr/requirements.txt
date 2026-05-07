@@ -1,8 +1,0 @@
-numpy>=1.23.3,<2.0.0
-opencv-python<=4.6.0.66
-pillow>=10.0.0
-urllib3<2.0.0
-chardet<5.0.0
-protobuf<=3.20.2
-paddlepaddle==2.6.1
-paddleocr>=2.7.3
