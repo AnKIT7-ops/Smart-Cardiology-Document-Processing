@@ -32,14 +32,14 @@ This system is designed to support **6 Primary Health Centers** in the Mangaluru
 
 | # | Module | Folder | Description |
 |---|--------|--------|-------------|
-| 1 | **AI Document Processing** | `ocr_nlp/` | Scans medical documents using PaddleOCR, extracts patient info via NLP |
-| 2 | **ECG Signal Analysis AI** | `ecg_analysis/` | Analyzes ECG signals, detects rhythm abnormalities and ST changes |
-| 3 | **Cardiac Risk Prediction** | `cardiac_risk_prediction/` | Predicts heart disease risk using Logistic Regression + XGBoost |
-| 4 | **Report Summarization AI** | `integrated_clinical_summary/` | Aggregates all patient data into unified clinical reports + PDF export |
-| 5 | **Tele-Cardiology Decision Support** | `Decision Support/` | Remote cardiac triage with diagnosis, urgency level, and referral suggestions |
-| 6 | **Critical Alert System** | `unified_alert_dashboard/` | Monitors high-risk patients with severity-filtered alert dashboard |
-| 7 | **Analytics Dashboard** | `dashboard-Tkinter/` | Visual analytics with charts, trends, and center-wise statistics |
-| 8 | **Offline Data Capture & Sync** | `offline_sync/` | Supports rural areas with offline data entry and sync-when-online |
+| 1 | **AI Document Processing** | `modules/ocr_nlp/` | Scans medical documents using PaddleOCR, extracts patient info via NLP |
+| 2 | **ECG Signal Analysis AI** | `modules/ecg_analysis/` | Analyzes ECG signals, detects rhythm abnormalities and ST changes |
+| 3 | **Cardiac Risk Prediction** | `modules/cardiac_risk_prediction/` | Predicts heart disease risk using Logistic Regression + XGBoost |
+| 4 | **Report Summarization AI** | `modules/integrated_clinical_summary/` | Aggregates all patient data into unified clinical reports + PDF export |
+| 5 | **Tele-Cardiology Decision Support** | `modules/tele_cardiology/` | Remote cardiac triage with diagnosis, urgency level, and referral suggestions |
+| 6 | **Critical Alert System** | `modules/unified_alert_dashboard/` | Monitors high-risk patients with severity-filtered alert dashboard |
+| 7 | **Analytics Dashboard** | `modules/analytics_dashboard/` | Visual analytics with charts, trends, and center-wise statistics |
+| 8 | **Offline Data Capture & Sync** | `modules/offline_sync/` | Supports rural areas with offline data entry and sync-when-online |
 
 ---
 
@@ -84,25 +84,29 @@ pip install paddlepaddle paddleocr opencv-python PyMuPDF
 ```
 Smart Cardiology Document Processing/
 │
-├── main_app.py                    ← 🚀 MAIN LAUNCHER (run this)
-├── requirements.txt               ← Python dependencies
-├── smart_cardiology.db            ← Shared SQLite database (auto-created)
-├── heart_disease_uci.csv          ← Training dataset for Module 3
-├── INTEGRATION_GUIDE_V2.md        ← Full technical integration guide
-├── README.md                      ← This file
+├── main_app.py                          ← 🚀 MAIN LAUNCHER (run this)
+├── requirements.txt                     ← Python dependencies
+├── README.md                            ← This file
+├── INTEGRATION_GUIDE_V2.md              ← Full technical integration guide
+├── smart_cardiology.db                  ← Shared SQLite database (auto-created)
+├── heart_disease_uci.csv                ← Training dataset for Module 3
+├── _check_status.py                     ← Integration health check script
 │
-├── shared/                        ← Shared database layer
+├── shared/                              ← Shared database layer
 │   ├── __init__.py
-│   └── database.py                ← All tables, helpers, read/write functions
+│   └── database.py                      ← All tables, helpers, CRUD functions
 │
-├── ocr_nlp/                       ← Module 1
-├── ecg_analysis/                  ← Module 2
-├── cardiac_risk_prediction/       ← Module 3
-├── integrated_clinical_summary/   ← Module 4
-├── Decision Support/              ← Module 5
-├── unified_alert_dashboard/       ← Module 6
-├── dashboard-Tkinter/             ← Module 7
-└── offline_sync/                  ← Module 8
+└── modules/                             ← All 8 application modules
+    ├── __init__.py
+    ├── ocr_nlp/                         ← Module 1: OCR + NLP
+    ├── ecg_analysis/                    ← Module 2: ECG Signal Analysis
+    ├── ecg_analysis_legacy/             ← Module 2: Legacy ECG code
+    ├── cardiac_risk_prediction/         ← Module 3: Risk Prediction
+    ├── integrated_clinical_summary/     ← Module 4: Report Summarization
+    ├── tele_cardiology/                 ← Module 5: Tele-Cardiology DSS
+    ├── unified_alert_dashboard/         ← Module 6: Alert Dashboard
+    ├── analytics_dashboard/             ← Module 7: Analytics Dashboard
+    └── offline_sync/                    ← Module 8: Offline Sync
 ```
 
 ---
@@ -157,28 +161,28 @@ Each module can also run standalone for testing:
 
 ```bash
 # Module 1 — OCR + NLP
-cd ocr_nlp && python main.py
+cd modules/ocr_nlp && python main.py
 
 # Module 2 — ECG Analysis
-cd ecg_analysis && python main.py
+cd modules/ecg_analysis && python main.py
 
 # Module 3 — Cardiac Risk Prediction
-cd cardiac_risk_prediction && python main.py
+cd modules/cardiac_risk_prediction && python main.py
 
 # Module 4 — Report Summarization
-cd integrated_clinical_summary && python main.py
+cd modules/integrated_clinical_summary && python main.py
 
 # Module 5 — Tele-Cardiology
-cd "Decision Support" && python tele_cardiology_decision_support.py
+cd modules/tele_cardiology && python tele_cardiology_decision_support.py
 
 # Module 6 — Alert Dashboard
-cd unified_alert_dashboard && python main.py
+cd modules/unified_alert_dashboard && python main.py
 
 # Module 7 — Analytics Dashboard
-cd dashboard-Tkinter && python main.py
+cd modules/analytics_dashboard && python main.py
 
 # Module 8 — Offline Sync
-cd offline_sync && python ui.py
+cd modules/offline_sync && python ui.py
 ```
 
 ---
@@ -197,7 +201,7 @@ cd offline_sync && python ui.py
 
 ### Adding a New Module
 
-1. Create a folder at the project root (e.g., `my_module/`)
+1. Create a folder inside `modules/` (e.g., `modules/my_module/`)
 2. Add these files:
    - `__init__.py` → `from .ui import launch`
    - `database.py` → Import from `shared/database.py` (see Integration Guide)
@@ -206,21 +210,33 @@ cd offline_sync && python ui.py
 3. Register your module in `main_app.py`'s `MODULES` list
 4. Read `INTEGRATION_GUIDE_V2.md` for the complete specification
 
-### Verifying Your Data
+### Project Root Path Pattern
+
+Since modules are inside `modules/<folder>/`, use **3 levels of dirname** to reach the project root:
 
 ```python
-import sqlite3
+import os, sys
 
-conn = sqlite3.connect("smart_cardiology.db")
-conn.row_factory = sqlite3.Row
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-# Check any table
-rows = conn.execute("SELECT * FROM tbl_patients LIMIT 5").fetchall()
-for row in rows:
-    print(dict(row))
-
-conn.close()
+from shared.database import init_db, ...
 ```
+
+### Verifying Integration
+
+Run the status check script:
+
+```bash
+python _check_status.py
+```
+
+This will verify:
+- Database initialization
+- All module folders exist
+- Every module has a working `launch()` function
+- All project files are in place
 
 ---
 

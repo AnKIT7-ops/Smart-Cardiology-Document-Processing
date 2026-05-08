@@ -1,12 +1,13 @@
-"""Final integration status check — tests each module in its proper context."""
+"""Integration status check — verifies all modules under modules/ folder."""
 import sys, os, subprocess
 
 sys.stdout.reconfigure(encoding="utf-8")
 ROOT = os.path.dirname(os.path.abspath(__file__))
+MODULES_DIR = os.path.join(ROOT, "modules")
 os.chdir(ROOT)
 
 print("=" * 60)
-print("  PROJECT INTEGRATION STATUS CHECK (FINAL)")
+print("  PROJECT INTEGRATION STATUS CHECK")
 print("=" * 60)
 
 # 1. Shared DB
@@ -22,66 +23,64 @@ print(f"  Patients: {len(pids)}")
 print(f"  Predictions: {len(preds)}")
 print(f"  Alerts: {len(alerts)}")
 
-# 2. Check each module by running a subprocess that mimics the main_app.py import
+# 2. Check each module
 modules = [
-    ("Module 1 (OCR+NLP)",     "ocr_nlp",                     "import ocr_nlp; print(hasattr(ocr_nlp, 'launch'))"),
-    ("Module 2 (ECG)",         "ecg_analysis",                 "import ecg_analysis; print(hasattr(ecg_analysis, 'launch'))"),
-    ("Module 3 (Risk)",        "cardiac_risk_prediction",      "import cardiac_risk_prediction; print(hasattr(cardiac_risk_prediction, 'launch'))"),
-    ("Module 4 (Summary)",     "integrated_clinical_summary",  "import integrated_clinical_summary; print(hasattr(integrated_clinical_summary, 'launch'))"),
-    ("Module 5 (Tele-Card)",   "Decision Support",             "import importlib.util, sys; sys.path.insert(0,'Decision Support'); spec=importlib.util.spec_from_file_location('m5','Decision Support/tele_cardiology_decision_support.py'); mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); print(hasattr(mod,'launch'))"),
-    ("Module 6 (Alerts)",      "unified_alert_dashboard",      "import unified_alert_dashboard; print(hasattr(unified_alert_dashboard, 'launch'))"),
-    ("Module 8 (Sync)",        "offline_sync",                 "import offline_sync; print(hasattr(offline_sync, 'launch'))"),
+    ("Module 1 (OCR+NLP)",     "ocr_nlp"),
+    ("Module 2 (ECG)",         "ecg_analysis"),
+    ("Module 3 (Risk)",        "cardiac_risk_prediction"),
+    ("Module 4 (Summary)",     "integrated_clinical_summary"),
+    ("Module 5 (Tele-Card)",   "tele_cardiology"),
+    ("Module 6 (Alerts)",      "unified_alert_dashboard"),
+    ("Module 8 (Sync)",        "offline_sync"),
 ]
 
 print("\n--- MODULE LAUNCH CHECK ---")
-for name, folder, check_code in modules:
-    folder_path = os.path.join(ROOT, folder)
+for name, folder in modules:
+    folder_path = os.path.join(MODULES_DIR, folder)
     if not os.path.isdir(folder_path):
-        print(f"  {name}: FOLDER MISSING")
+        print(f"  {name}: FOLDER MISSING (modules/{folder}/)")
         continue
 
     has_init = os.path.exists(os.path.join(folder_path, "__init__.py"))
     has_ui = os.path.exists(os.path.join(folder_path, "ui.py"))
+    flags = []
+    if has_init: flags.append("init")
+    if has_ui: flags.append("ui")
 
-    # Run import test in subprocess with correct paths
-    env_paths = os.pathsep.join([ROOT, folder_path])
-    full_code = f"import sys; sys.path[:0]=[r'{ROOT}',r'{folder_path}']; {check_code}"
-    result = subprocess.run(
-        [sys.executable, "-c", full_code],
-        capture_output=True, text=True, timeout=15, cwd=ROOT
+    # Test import in subprocess
+    check_code = (
+        f"import sys; sys.path[:0]=[r'{ROOT}',r'{folder_path}'];"
+        f"from modules.{folder} import launch; print(callable(launch))"
     )
-
+    result = subprocess.run(
+        [sys.executable, "-c", check_code],
+        capture_output=True, text=True, timeout=15, cwd=ROOT,
+    )
     if result.returncode == 0 and "True" in result.stdout:
         status = "OK — launch() ready"
-    elif result.returncode == 0:
-        status = "IMPORTED but no launch()"
     else:
         err = (result.stderr or "").strip().split("\n")[-1][:70]
         status = f"ERROR: {err}"
 
-    flags = []
-    if has_init:
-        flags.append("init")
-    if has_ui:
-        flags.append("ui")
-    flag_str = ",".join(flags) if flags else "no init/ui"
-
-    print(f"  {name}: [{flag_str}] {status}")
+    print(f"  {name}: [{','.join(flags)}] {status}")
 
 # Dashboard
 print("\n--- DASHBOARD ---")
-try:
-    sys.path.insert(0, os.path.join(ROOT, "dashboard-Tkinter"))
-    from dashboard_app import AnalyticsDashboard
-    print("  Module 7 (Dashboard-Tkinter): OK")
-except Exception as e:
-    print(f"  Module 7 (Dashboard-Tkinter): FAIL — {e}")
-
-# Main launcher
-print("\n--- MAIN LAUNCHER ---")
-if os.path.exists(os.path.join(ROOT, "main_app.py")):
-    print("  main_app.py: EXISTS")
+dash_path = os.path.join(MODULES_DIR, "analytics_dashboard")
+if os.path.isdir(dash_path):
+    try:
+        sys.path.insert(0, dash_path)
+        from dashboard_app import AnalyticsDashboard
+        print("  Module 7 (Analytics Dashboard): OK")
+    except Exception as e:
+        print(f"  Module 7 (Analytics Dashboard): FAIL — {e}")
 else:
-    print("  main_app.py: MISSING")
+    print("  Module 7: FOLDER MISSING")
+
+# Files
+print("\n--- PROJECT FILES ---")
+for f in ["main_app.py", "README.md", "requirements.txt", "INTEGRATION_GUIDE_V2.md"]:
+    exists = os.path.exists(os.path.join(ROOT, f))
+    print(f"  {f}: {'EXISTS' if exists else 'MISSING'}")
 
 print("\n" + "=" * 60)

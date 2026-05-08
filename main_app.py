@@ -17,28 +17,29 @@ from tkinter import messagebox
 
 # ── Project root setup ─────────────────────────────────────
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+MODULES_DIR = os.path.join(PROJECT_ROOT, "modules")
+
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from shared.database import init_db  # noqa: E402
 
 # ── Module registry ────────────────────────────────────────
-# (button_label, icon, module_folder, launch_strategy)
+# (button_label, icon, folder_inside_modules, launch_strategy)
 #
 # launch_strategy:
-#   "package"         → import <folder> as a package, call .launch(parent)
-#   "file:<filename>" → load a single .py file, call .launch(parent)
-#   "dashboard"       → special handling for Module 7 (standalone class)
+#   "package"   → import modules.<folder> as a package, call .launch(parent)
+#   "dashboard" → special handling for Module 7
 
 MODULES = [
-    ("AI Document Processing (OCR + NLP)",  "📄",  "ocr_nlp",                     "package"),
-    ("ECG Signal Analysis AI",              "💓",  "ecg_analysis",                "package"),
-    ("Cardiac Risk Prediction",             "🎯",  "cardiac_risk_prediction",     "package"),
-    ("Integrated Clinical Summary",         "📋",  "integrated_clinical_summary", "package"),
-    ("Tele-Cardiology Decision Support",    "📡",  "Decision Support",            "file:tele_cardiology_decision_support"),
-    ("Critical Alert System",               "🚨",  "unified_alert_dashboard",     "package"),
-    ("Analytics Dashboard",                 "📊",  "dashboard-Tkinter",           "dashboard"),
-    ("Offline Data Capture & Sync",         "🔄",  "offline_sync",                "package"),
+    ("AI Document Processing (OCR + NLP)",  "📄", "ocr_nlp",                     "package"),
+    ("ECG Signal Analysis AI",              "💓", "ecg_analysis",                "package"),
+    ("Cardiac Risk Prediction",             "🎯", "cardiac_risk_prediction",     "package"),
+    ("Integrated Clinical Summary",         "📋", "integrated_clinical_summary", "package"),
+    ("Tele-Cardiology Decision Support",    "📡", "tele_cardiology",             "package"),
+    ("Critical Alert System",               "🚨", "unified_alert_dashboard",     "package"),
+    ("Analytics Dashboard",                 "📊", "analytics_dashboard",         "dashboard"),
+    ("Offline Data Capture & Sync",         "🔄", "offline_sync",                "package"),
 ]
 
 # ── Colors ─────────────────────────────────────────────────
@@ -50,52 +51,38 @@ MUTED       = "#94a3b8"
 ACCENT      = "#3b82f6"
 HOVER       = "#2563eb"
 BORDER      = "#334155"
-SUCCESS     = "#22c55e"
-DANGER      = "#ef4444"
 MODULE_COLORS = [
     "#3b82f6", "#8b5cf6", "#ef4444", "#f59e0b",
     "#06b6d4", "#ec4899", "#10b981", "#6366f1",
 ]
 
 
-# ── Launcher functions ─────────────────────────────────────
+# ── Launch helpers ─────────────────────────────────────────
 
-def _ensure_path(folder_path):
-    """Add folder to sys.path if not already present."""
-    if folder_path not in sys.path:
-        sys.path.insert(0, folder_path)
+def _ensure_path(*paths):
+    """Add directories to sys.path if not already present."""
+    for p in paths:
+        if p not in sys.path:
+            sys.path.insert(0, p)
 
 
 def _launch_package(folder, parent):
-    """Import a Python package and call its launch(parent)."""
-    folder_path = os.path.join(PROJECT_ROOT, folder)
-    _ensure_path(folder_path)
-    mod = importlib.import_module(folder)
+    """Import a module package from modules/<folder> and call launch(parent)."""
+    folder_path = os.path.join(MODULES_DIR, folder)
+    _ensure_path(MODULES_DIR, folder_path)
+
+    pkg_name = f"modules.{folder}"
+    # Clear stale cache if re-opening the same module
+    if pkg_name in sys.modules:
+        mod = sys.modules[pkg_name]
+    else:
+        mod = importlib.import_module(pkg_name)
     mod.launch(parent)
 
 
-def _launch_file(folder, filename, parent):
-    """Load a .py file from a folder and call its launch(parent)."""
-    folder_path = os.path.join(PROJECT_ROOT, folder)
-    _ensure_path(folder_path)
-    file_path = os.path.join(folder_path, filename + ".py")
-
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File not found: {file_path}")
-
-    spec = importlib.util.spec_from_file_location(filename, file_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-
-    if hasattr(mod, "launch"):
-        mod.launch(parent)
-    else:
-        raise AttributeError(f"No launch() function found in {file_path}")
-
-
 def _launch_dashboard(parent):
-    """Special handling for Module 7 which takes a root window parameter."""
-    folder_path = os.path.join(PROJECT_ROOT, "dashboard-Tkinter")
+    """Special handling for Module 7 — AnalyticsDashboard takes a root window."""
+    folder_path = os.path.join(MODULES_DIR, "analytics_dashboard")
     _ensure_path(folder_path)
 
     from dashboard_app import AnalyticsDashboard  # noqa: E402
@@ -109,13 +96,10 @@ def open_module(label, folder, method, parent):
     try:
         if method == "package":
             _launch_package(folder, parent)
-        elif method.startswith("file:"):
-            filename = method.split(":", 1)[1]
-            _launch_file(folder, filename, parent)
         elif method == "dashboard":
             _launch_dashboard(parent)
         else:
-            raise ValueError(f"Unknown launch method: {method}")
+            raise ValueError(f"Unknown method: {method}")
     except Exception as exc:
         messagebox.showerror(
             f"Cannot Open {label}",
@@ -137,7 +121,6 @@ class LauncherApp:
         self.root.minsize(560, 640)
         self.root.configure(bg=BG)
 
-        # Initialize the shared database
         try:
             init_db()
         except Exception as e:
@@ -171,7 +154,7 @@ class LauncherApp:
         # ── Accent bar ──
         tk.Frame(self.root, bg=ACCENT, height=3).pack(fill="x")
 
-        # ── Module buttons area ──
+        # ── Module buttons ──
         body = tk.Frame(self.root, bg=BG)
         body.pack(fill="both", expand=True, padx=28, pady=20)
 
@@ -190,47 +173,38 @@ class LauncherApp:
         footer.pack(fill="x", padx=28, pady=(0, 14))
 
         tk.Frame(footer, bg=BORDER, height=1).pack(fill="x", pady=(0, 8))
-
         tk.Label(
             footer,
             text="All modules share data via  smart_cardiology.db\n"
-                 "Run:  python main_app.py  |  Docs:  INTEGRATION_GUIDE_V2.md",
-            bg=BG, fg=MUTED,
-            font=("Segoe UI", 8),
-            justify="center",
+                 "Docs:  INTEGRATION_GUIDE_V2.md  |  README.md",
+            bg=BG, fg=MUTED, font=("Segoe UI", 8), justify="center",
         ).pack()
 
     def _module_button(self, parent, number, label, icon, folder, method, accent_color):
-        """Create a single styled module button."""
-        folder_path = os.path.join(PROJECT_ROOT, folder)
+        folder_path = os.path.join(MODULES_DIR, folder)
         exists = os.path.isdir(folder_path)
 
-        # Outer frame with colored left border
         outer = tk.Frame(parent, bg=BG)
         outer.pack(fill="x", pady=3)
 
         # Color indicator
-        indicator = tk.Frame(outer, bg=accent_color if exists else "#374151", width=4)
-        indicator.pack(side="left", fill="y")
+        tk.Frame(outer, bg=accent_color if exists else "#374151", width=4).pack(
+            side="left", fill="y")
 
-        # Button
         btn_bg = CARD if exists else "#111827"
         btn_fg = TEXT if exists else "#4b5563"
-        display_text = f"  {icon}   {number}  —  {label}"
+        display = f"  {icon}   {number}  —  {label}"
         if not exists:
-            display_text += "  (not found)"
+            display += "  (not found)"
 
         btn = tk.Button(
-            outer,
-            text=display_text,
+            outer, text=display,
             bg=btn_bg, fg=btn_fg,
             activebackground=HOVER if exists else btn_bg,
             activeforeground="white" if exists else btn_fg,
-            font=("Segoe UI", 10),
-            relief="flat", anchor="w",
-            padx=14, pady=10,
+            font=("Segoe UI", 10), relief="flat", anchor="w",
+            padx=14, pady=10, bd=0,
             cursor="hand2" if exists else "arrow",
-            bd=0,
             command=lambda: open_module(label, folder, method, self.root) if exists else None,
         )
         btn.pack(side="left", fill="x", expand=True)
@@ -240,11 +214,8 @@ class LauncherApp:
             btn.bind("<Leave>", lambda e, b=btn: b.config(bg=CARD))
 
     def run(self):
-        """Start the Tk mainloop."""
         self.root.mainloop()
 
-
-# ── Entry point ────────────────────────────────────────────
 
 if __name__ == "__main__":
     LauncherApp().run()

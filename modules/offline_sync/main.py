@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import threading
 import time
@@ -12,8 +13,8 @@ from database import (
     DB_PATH as LOCAL_DB_PATH,
 )
 
-
-MAIN_DB_PATH      = "smart_cardiology.db"   
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+MAIN_DB_PATH  = str(_PROJECT_ROOT / "smart_cardiology.db")
 SYNC_INTERVAL_SEC = 300                   
 
 logging.basicConfig(

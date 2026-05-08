@@ -8,8 +8,8 @@ except ImportError:
     from database import init_db
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-LEGACY_ECG_PATH = PROJECT_ROOT / "ecg analysis" / "ecg_ai_system23.py"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+LEGACY_ECG_PATH = PROJECT_ROOT / "modules" / "ecg_analysis_legacy" / "ecg_ai_system23.py"
 
 
 def _load_legacy_module():

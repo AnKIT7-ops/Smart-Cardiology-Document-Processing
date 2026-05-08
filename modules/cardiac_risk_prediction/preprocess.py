@@ -44,7 +44,7 @@ def get_dataset_path():
     (where the original dataset lives).
     """
     # Go up one level from the cardiac_risk_prediction package folder
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     csv_path = os.path.join(base_dir, "heart_disease_uci.csv")
 
     if not os.path.exists(csv_path):
