@@ -1,21 +1,20 @@
+import sqlite3
 import threading
 import time
 import logging
-import requests
+from pathlib import Path
 
 from database import (
     fetch_pending_records,
     mark_as_synced,
     mark_as_failed,
-    save_offline_record,
     init_db,
+    DB_PATH as LOCAL_DB_PATH,
 )
 
 
-CENTRAL_API_URL   = "https://central-server.com/api/sync"   # ← update this
-PING_URL          = "https://central-server.com/ping"        # ← health-check endpoint
-SYNC_INTERVAL_SEC = 300        # auto-sync every 5 minutes
-REQUEST_TIMEOUT   = 10         # seconds per HTTP request
+MAIN_DB_PATH      = "smart_cardiology.db"   
+SYNC_INTERVAL_SEC = 300                   
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,7 +26,7 @@ log = logging.getLogger("module8")
 _on_sync_done_callbacks: list = []
 
 def on_sync_done(callback):
-    """Register a callback(stats: dict) to fire after each sync cycle."""
+    """Register a callback(stats: dict) fired after every sync cycle."""
     _on_sync_done_callbacks.append(callback)
 
 def _fire_callbacks(stats: dict):
@@ -38,58 +37,91 @@ def _fire_callbacks(stats: dict):
             log.warning("Callback error: %s", exc)
 
 
-def is_online() -> bool:
+
+def is_main_db_accessible() -> bool:
     """
-    Returns True if the central server is reachable.
-    Uses a lightweight /ping endpoint to avoid heavy payloads.
+    Returns True if smart_cardiology.db exists and can be opened.
+    Replaces the old HTTP /ping check — no network needed.
     """
     try:
-        resp = requests.get(PING_URL, timeout=REQUEST_TIMEOUT)
-        return resp.status_code == 200
-    except requests.exceptions.RequestException:
+        if not Path(MAIN_DB_PATH).exists():
+            return False
+        conn = sqlite3.connect(MAIN_DB_PATH)
+        conn.execute("SELECT 1")
+        conn.close()
+        return True
+    except sqlite3.Error:
         return False
+
+
+
+def _ensure_main_table():
+    """
+    Create tbl_sync_status in smart_cardiology.db if it doesn't exist yet.
+    Uses the exact same schema as the local copy.
+    """
+    conn = sqlite3.connect(MAIN_DB_PATH)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS tbl_sync_status (
+            local_record_id TEXT PRIMARY KEY,
+            module_name     TEXT NOT NULL,
+            sync_status     TEXT NOT NULL CHECK(sync_status IN ('PENDING','SYNCED','FAILED')),
+            device_id       TEXT,
+            last_sync_time  TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
 
 
 def sync_one_record(record: dict) -> bool:
     """
-    Push a single PENDING record to the central server.
+    Upsert a single PENDING record into smart_cardiology.db → tbl_sync_status.
     Returns True on success, False on failure.
     """
     try:
-        resp = requests.post(
-            CENTRAL_API_URL,
-            json=record,
-            timeout=REQUEST_TIMEOUT,
-        )
-        if resp.status_code == 200:
-            mark_as_synced(record["local_record_id"])
-            log.info("SYNCED   → %s", record["local_record_id"])
-            return True
-        else:
-            mark_as_failed(record["local_record_id"])
-            log.warning(
-                "FAILED   → %s  (HTTP %s)",
+        _ensure_main_table()
+        conn = sqlite3.connect(MAIN_DB_PATH)
+        conn.execute(
+            """
+            INSERT INTO tbl_sync_status
+                (local_record_id, module_name, sync_status, device_id, last_sync_time)
+            VALUES (?, ?, 'SYNCED', ?, ?)
+            ON CONFLICT(local_record_id) DO UPDATE SET
+                sync_status    = 'SYNCED',
+                last_sync_time = excluded.last_sync_time
+            """,
+            (
                 record["local_record_id"],
-                resp.status_code,
-            )
-            return False
-    except requests.exceptions.RequestException as exc:
+                record["module_name"],
+                record.get("device_id"),
+                record.get("last_sync_time"),
+            ),
+        )
+        conn.commit()
+        conn.close()
+
+        mark_as_synced(record["local_record_id"])
+        log.info("SYNCED   → %s", record["local_record_id"])
+        return True
+
+    except sqlite3.Error as exc:
         mark_as_failed(record["local_record_id"])
-        log.error("ERROR    → %s  (%s)", record["local_record_id"], exc)
+        log.error("FAILED   → %s  (%s)", record["local_record_id"], exc)
         return False
 
 
 def run_sync_cycle(device_id: str = None) -> dict:
     """
-    Attempt to sync all PENDING records for a device (or all devices).
+    Sync all PENDING local records into smart_cardiology.db.
 
-    Returns a stats dict:
-        { "attempted": int, "synced": int, "failed": int }
+    Returns stats dict: { "attempted": int, "synced": int, "failed": int }
     """
     init_db()
 
-    if not is_online():
-        log.info("Offline — sync skipped.")
+    if not is_main_db_accessible():
+        log.warning("smart_cardiology.db not accessible — sync skipped.")
         return {"attempted": 0, "synced": 0, "failed": 0}
 
     pending = fetch_pending_records(device_id=device_id)
@@ -98,21 +130,20 @@ def run_sync_cycle(device_id: str = None) -> dict:
     if not pending:
         log.info("No pending records to sync.")
     else:
-        log.info("Syncing %d pending record(s)…", len(pending))
+        log.info("Syncing %d pending record(s) → %s …", len(pending), MAIN_DB_PATH)
         for record in pending:
             if sync_one_record(record):
                 stats["synced"] += 1
             else:
                 stats["failed"] += 1
-
         log.info(
             "Cycle complete — synced: %d  failed: %d",
-            stats["synced"],
-            stats["failed"],
+            stats["synced"], stats["failed"],
         )
 
     _fire_callbacks(stats)
     return stats
+
 
 
 _scheduler_thread: threading.Thread | None = None
@@ -154,8 +185,8 @@ def stop_scheduler():
 
 
 def scheduler_is_running() -> bool:
-    """Returns True if the background sync thread is active."""
     return bool(_scheduler_thread and _scheduler_thread.is_alive())
+
 
 
 if __name__ == "__main__":
@@ -165,6 +196,7 @@ if __name__ == "__main__":
         rid = save_offline_record(mod, device_id="DEV-MANGALURU-01")
         print(f"Saved offline record: {rid}  [{mod}]")
 
-    print("\nRunning one manual sync cycle…")
+    print(f"\nMain DB accessible: {is_main_db_accessible()}")
+    print("Running one manual sync cycle…")
     stats = run_sync_cycle(device_id="DEV-MANGALURU-01")
     print(f"Result: {stats}")
