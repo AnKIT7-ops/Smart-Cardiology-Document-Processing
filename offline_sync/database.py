@@ -4,7 +4,6 @@ from datetime import datetime
 
 DB_PATH = "local_cad_sync.db"
 
-───────────────────────────────────
 
 def now_text() -> str:
     """Return current timestamp as a formatted string."""

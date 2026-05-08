@@ -2,7 +2,10 @@ import importlib.util
 import sys
 from pathlib import Path
 
-from .database import init_db
+try:
+    from .database import init_db
+except ImportError:
+    from database import init_db
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

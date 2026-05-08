@@ -576,6 +576,47 @@ class App(tk.Tk):
 
 
 
+def launch(parent):
+    """Called by the main launcher to open Module 1 as a Toplevel window."""
+    window = tk.Toplevel(parent)
+    window.title("ECG Document Processor — MODULE 1")
+    window.geometry("1100x700")
+    window.minsize(900, 580)
+    window.configure(bg=C["bg"])
+
+    try:
+        db = DatabaseWrapper()
+    except Exception as e:
+        messagebox.showwarning("DB Warning", f"Database issue: {e}")
+        return window
+
+    area = tk.Frame(window, bg=C["bg"])
+    pages = {}
+
+    def show(idx):
+        for page in pages.values():
+            page.pack_forget()
+        pages[idx].pack(fill="both", expand=True)
+        if idx == 1:
+            pages[1].refresh()
+        elif idx == 2:
+            pages[2].refresh()
+
+    def on_done(uid):
+        show(1)
+        pages[1].refresh(preselect_id=uid)
+
+    Sidebar(window, on_select=show).pack(side="left", fill="y")
+    area.pack(side="left", fill="both", expand=True)
+
+    pages[0] = UploadPage(area, db, on_done=on_done)
+    pages[1] = ExtractedPage(area, db)
+    pages[2] = HistoryPage(area, db)
+    show(0)
+
+    return window
+
+
 def run_ui():
     App().mainloop()
 

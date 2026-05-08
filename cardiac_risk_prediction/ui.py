@@ -419,9 +419,15 @@ class CardiacRiskApp:
         self.saved_label.config(text="Saved Record:  --", fg=SUBTEXT)
 
 
+def launch(parent):
+    """Called by the main launcher to open Module 3 as a Toplevel window."""
+    window = tk.Toplevel(parent)
+    return CardiacRiskApp(window)
+
 
 # ======================== STANDALONE LAUNCH ========================
 if __name__ == "__main__":
     root = tk.Tk()
     app = CardiacRiskApp(root)
     root.mainloop()
+

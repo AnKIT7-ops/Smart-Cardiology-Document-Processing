@@ -335,6 +335,158 @@ class SyncDashboard(tk.Tk):
             relief="flat", padx=14, pady=6, cursor="hand2",
         )
 
+def launch(parent):
+    """Called by the main launcher to open Module 8 as a Toplevel window."""
+    init_db()
+    window = tk.Toplevel(parent)
+    window.title("Module 8 — Offline Data Capture & Sync  |  CAD Foundation")
+    window.geometry("1100x680")
+    window.minsize(900, 580)
+    window.configure(bg=BG_DARK)
+
+    # Build a simplified version of SyncDashboard inside the Toplevel
+    app = SyncDashboard.__new__(SyncDashboard)
+    app.root = window
+    # Monkey-patch the Tk methods to use the Toplevel
+    app.title = window.title
+    app.geometry = window.geometry
+    app.minsize = window.minsize
+    app.configure = window.configure
+    app.after = window.after
+
+    # Re-run the init logic on the toplevel
+    on_sync_done(app._on_sync_complete)
+    app._build_ui_on(window)
+    app._refresh_table()
+    app._refresh_stats()
+    app._update_scheduler_btn()
+    app._poll_online_status()
+
+    return window
+
+
+# Extend SyncDashboard with a method that builds UI on a given parent
+def _build_ui_on(self, root):
+    """Build the dashboard UI on a given root (Tk or Toplevel)."""
+    self.root = root
+
+    top = tk.Frame(root, bg=BG_DARK, pady=10)
+    top.pack(fill="x", padx=20)
+
+    tk.Label(
+        top, text="🫀 CAD — Module 8: Offline Sync Dashboard",
+        bg=BG_DARK, fg=TEXT_WHITE,
+        font=("Segoe UI", 15, "bold"),
+    ).pack(side="left")
+
+    self._db_var = tk.StringVar(value="● Checking DB…")
+    self._db_lbl = tk.Label(
+        top, textvariable=self._db_var,
+        bg=BG_DARK, fg=TEXT_MUTED,
+        font=("Segoe UI", 10, "bold"),
+    )
+    self._db_lbl.pack(side="right", padx=(0, 10))
+
+    tk.Label(
+        top, text=f"Target DB: {MAIN_DB_PATH}",
+        bg=BG_DARK, fg=TEXT_MUTED,
+        font=("Segoe UI", 9),
+    ).pack(side="right", padx=20)
+
+    stats_frame = tk.Frame(root, bg=BG_DARK)
+    stats_frame.pack(fill="x", padx=20, pady=(0, 12))
+
+    self._stat_vars = {}
+    for label, key, color in [
+        ("PENDING",  "PENDING", WARNING),
+        ("SYNCED",   "SYNCED",  SUCCESS),
+        ("FAILED",   "FAILED",  DANGER),
+    ]:
+        card = tk.Frame(stats_frame, bg=BG_CARD, bd=0, relief="flat",
+                        padx=20, pady=12)
+        card.pack(side="left", padx=(0, 12), ipadx=10)
+        var = tk.StringVar(value="0")
+        self._stat_vars[key] = var
+        tk.Label(card, textvariable=var, bg=BG_CARD, fg=color,
+                 font=("Segoe UI", 22, "bold")).pack()
+        tk.Label(card, text=label, bg=BG_CARD, fg=TEXT_MUTED,
+                 font=("Segoe UI", 9)).pack()
+
+    btn_frame = tk.Frame(root, bg=BG_DARK)
+    btn_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+    self._sync_btn = self._btn(
+        btn_frame, "⟳  Sync Now", self._manual_sync, ACCENT)
+    self._sync_btn.pack(side="left", padx=(0, 8))
+
+    self._scheduler_btn = self._btn(
+        btn_frame, "▶  Start Auto-Sync", self._toggle_scheduler, SUCCESS)
+    self._scheduler_btn.pack(side="left", padx=(0, 8))
+
+    self._btn(btn_frame, "+ Add Test Record", self._open_add_dialog,
+              BG_INPUT).pack(side="left", padx=(0, 8))
+
+    self._btn(btn_frame, "🗑  Delete Selected", self._delete_selected,
+              DANGER).pack(side="left")
+
+    self._btn(btn_frame, "↺  Refresh", self._refresh_all,
+              BG_CARD).pack(side="right")
+
+    tbl_frame = tk.Frame(root, bg=BG_DARK, padx=20, pady=0)
+    tbl_frame.pack(fill="both", expand=True, padx=20, pady=(0, 8))
+
+    cols = ("local_record_id", "module_name", "sync_status",
+            "device_id", "last_sync_time")
+    col_widths = (200, 120, 100, 180, 180)
+
+    style = ttk.Style(root)
+    style.theme_use("clam")
+    style.configure("CAD.Treeview",
+                    background=BG_CARD,
+                    foreground=TEXT_WHITE,
+                    fieldbackground=BG_CARD,
+                    rowheight=32,
+                    font=("Segoe UI", 10))
+    style.configure("CAD.Treeview.Heading",
+                    background=BG_INPUT,
+                    foreground=TEXT_WHITE,
+                    font=("Segoe UI", 10, "bold"),
+                    relief="flat")
+    style.map("CAD.Treeview",
+              background=[("selected", ACCENT)],
+              foreground=[("selected", TEXT_WHITE)])
+
+    self._tree = ttk.Treeview(
+        tbl_frame, columns=cols, show="headings",
+        style="CAD.Treeview", selectmode="browse",
+    )
+    headers = ("Local Record ID", "Module", "Status",
+               "Device ID", "Last Sync Time")
+    for col, header, width in zip(cols, headers, col_widths):
+        self._tree.heading(col, text=header,
+                           command=lambda c=col: self._sort_by(c))
+        self._tree.column(col, width=width, anchor="w", minwidth=80)
+
+    for status, color in STATUS_COLORS.items():
+        self._tree.tag_configure(status, foreground=color)
+
+    vsb = ttk.Scrollbar(tbl_frame, orient="vertical",
+                        command=self._tree.yview)
+    self._tree.configure(yscrollcommand=vsb.set)
+
+    self._tree.pack(side="left", fill="both", expand=True)
+    vsb.pack(side="right", fill="y")
+
+    self._status_var = tk.StringVar(value="Ready.")
+    tk.Label(
+        root, textvariable=self._status_var,
+        bg=BG_DARK, fg=TEXT_MUTED,
+        font=("Segoe UI", 9), anchor="w", padx=20,
+    ).pack(fill="x", pady=(0, 6))
+
+
+SyncDashboard._build_ui_on = _build_ui_on
+
 
 if __name__ == "__main__":
     app = SyncDashboard()

@@ -66,3 +66,10 @@
 2026-05-07 00:29:21,203 [INFO] Database ready: C:\Users\ASUS\OneDrive\Desktop\smartcardio\smart_cardiology.db
 2026-05-07 00:29:21,383 [INFO] Model loaded: C:\Users\ASUS\OneDrive\Desktop\smartcardio\ecg analysis\ecg_model.pkl v1.0.0-GBT
 >>>>>>> 42cf8e47bc41685fcb4cf83125dc9d07d130168f
+2026-05-08 23:03:10,873 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
+2026-05-08 23:03:10,910 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\ecg analysis\ecg_model.pkl v1.0.0-GBT
+2026-05-08 23:04:00,268 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
+2026-05-08 23:04:00,286 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\ecg analysis\ecg_model.pkl v1.0.0-GBT
+2026-05-08 23:04:47,597 [INFO] Saved ECG result ECG-0004: Ventricular Tachycardia
+2026-05-08 23:29:47,751 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
+2026-05-08 23:29:47,770 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\ecg analysis\ecg_model.pkl v1.0.0-GBT
