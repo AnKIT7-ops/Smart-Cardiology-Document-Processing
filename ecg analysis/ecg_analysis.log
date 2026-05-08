@@ -42,6 +42,7 @@
 2026-05-06 21:25:35,173 [INFO] Exported 2 records to C:/Users/adars/OneDrive/AppData/Desktop/Kakunje/ankitlund/Smart-Cardiology-Document-Processing/tbl_ecg_data.csv
 2026-05-06 21:26:40,000 [INFO] Saved ECG result ECG-0003: Ventricular Tachycardia
 2026-05-06 21:26:54,991 [INFO] PDF report saved: C:/Users/adars/OneDrive/AppData/Desktop/Kakunje/mod2part2/ECG_Report_P-0001.pdf
+<<<<<<< HEAD
 2026-05-06 22:34:09,097 [INFO] Database ready: c:\Users\adars\OneDrive\AppData\Desktop\Kakunje\ankitlund\Smart-Cardiology-Document-Processing\smart_cardiology.db
 2026-05-06 22:34:09,148 [INFO] Model loaded: c:\Users\adars\OneDrive\AppData\Desktop\Kakunje\ankitlund\Smart-Cardiology-Document-Processing\ecg analysis\ecg_model.pkl v1.0.0-GBT
 2026-05-06 22:34:21,625 [INFO] Saved ECG result ECG-0004: Normal Sinus Rhythm
@@ -61,3 +62,7 @@
 2026-05-08 22:18:25,401 [INFO] Saved ECG result ECG-0012: Ventricular Tachycardia
 2026-05-08 22:18:44,241 [INFO] Saved ECG result ECG-0013: Ventricular Tachycardia
 2026-05-08 22:18:44,314 [INFO] Saved ECG result ECG-0014: Bundle Branch Block
+=======
+2026-05-07 00:29:21,203 [INFO] Database ready: C:\Users\ASUS\OneDrive\Desktop\smartcardio\smart_cardiology.db
+2026-05-07 00:29:21,383 [INFO] Model loaded: C:\Users\ASUS\OneDrive\Desktop\smartcardio\ecg analysis\ecg_model.pkl v1.0.0-GBT
+>>>>>>> 42cf8e47bc41685fcb4cf83125dc9d07d130168f

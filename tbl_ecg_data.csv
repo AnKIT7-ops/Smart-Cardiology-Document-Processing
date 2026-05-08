@@ -1,3 +1,0 @@
-id,patient_id,timestamp,center_id,center_name,heart_rate,diagnosis,confidence,adjusted_risk,ai_remarks,signal_quality,status
-ECG-0002,P-0001,2026-05-06 21:25:04,CEN-001,Mangaluru Central,70,Normal,1.0,Low,"Diagnosis: Normal Sinus Rhythm | Risk: Low | Lead: II | QRS: 60.0 ms | QT: 352.9 ms | PR: 156.5 ms | Differential: Ventricular Tachycardia (0%), Bradycardia (0%) | Recommendation: Routine follow-up. Maintain healthy lifestyle.",1.0,COMPLETED
-ECG-0001,P-0001,2026-05-06 21:18:50,CEN-001,Mangaluru Central,70,Normal,1.0,Low,"Diagnosis: Normal Sinus Rhythm | Risk: Low | Lead: II | QRS: 60.0 ms | QT: 419.4 ms | PR: 147.7 ms | Differential: Ventricular Tachycardia (0%), Bradycardia (0%) | Recommendation: Routine follow-up. Maintain healthy lifestyle.",1.0,COMPLETED

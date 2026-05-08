@@ -10,14 +10,16 @@ This system processes cardiology data across 6 health centers in the Mangaluru/U
 
 ### Module Responsibilities
 
-| Module | Name | What It Does | Status |
-|--------|------|-------------|--------|
-| Module 1 | OCR + NLP | Scans medical documents, extracts patient info | **Needs integration** |
-| Module 2 | ECG Signal Analysis | Analyzes ECG signals, detects abnormalities | **Needs integration** |
-| Module 3 | Cardiac Risk Prediction | Predicts heart disease risk using ML | ✅ Done |
-| Module 5 | Report Generation | Generates formatted patient reports | **Needs integration** |
-| Module 6 | Critical Alerts | Flags high-risk patients, sends notifications | **Needs integration** |
-| Module 7 | Analytics Dashboard | Visualizes all data with charts and tables | ✅ Done |
+| Module | Name | Folder | What It Does | Status |
+|--------|------|--------|-------------|--------|
+| Module 1 | AI Document Processing (OCR + NLP) | `ocr_nlp/` | Scans medical documents, extracts patient info | ✅ Built |
+| Module 2 | ECG Signal Analysis AI | `ecg_analysis/` | Analyzes ECG signals, detects abnormalities | ✅ Built |
+| Module 3 | Cardiac Risk Prediction | `cardiac_risk_prediction/` | Predicts heart disease risk using ML | ✅ Built |
+| Module 4 | Report Summarization AI | `integrated_clinical_summary/` | Summarizes all patient data into clinical reports + PDF | ✅ Built |
+| Module 5 | Tele-Cardiology Decision Support | — | Remote diagnosis support for doctors | ❌ Not built |
+| Module 6 | Critical Alert System | `unified_alert_dashboard/` | Monitors and manages high-risk patient alerts | ✅ Built |
+| Module 7 | Analytics Dashboard | `dashboard-Tkinter/` | Visualizes all data with charts and tables | ✅ Built |
+| Module 8 | Offline Data Capture & Sync | — | Supports rural areas with low internet | ❌ Not built |
 
 ---
 
@@ -33,11 +35,22 @@ Smart Cardiology Document Processing/
 ├── smart_cardiology.db                 ← Shared SQLite DB (auto-created)
 ├── INTEGRATION_GUIDE_V2.md             ← This file
 │
-├── shared/                             ← SHARED — DO NOT MODIFY
+├── shared/                             ← SHARED — DO NOT MODIFY without team approval
 │   ├── __init__.py
 │   └── database.py                     ← All DB tables, helpers, read/write functions
 │
-├── cardiac_risk_prediction/            ← MODULE 3 (done)
+├── ocr_nlp/                            ← MODULE 1 — OCR + NLP
+│   ├── database.py
+│   ├── main.py
+│   └── ui.py
+│
+├── ecg_analysis/                       ← MODULE 2 — ECG Signal Analysis
+│   ├── __init__.py
+│   ├── database.py
+│   ├── main.py
+│   └── ui.py
+│
+├── cardiac_risk_prediction/            ← MODULE 3 — Cardiac Risk Prediction
 │   ├── __init__.py
 │   ├── main.py
 │   ├── model.py
@@ -46,7 +59,23 @@ Smart Cardiology Document Processing/
 │   ├── database.py                     ← Local wrapper that imports from shared/
 │   └── saved_models/
 │
-├── dashboard-Tkinter/                  ← MODULE 7 - Tkinter version (done)
+├── integrated_clinical_summary/        ← MODULE 4 — Report Summarization
+│   ├── __init__.py
+│   ├── main.py
+│   └── ui.py
+│
+├── tele_cardiology/                    ← MODULE 5 — Tele-Cardiology (NOT BUILT YET)
+│   ├── __init__.py
+│   ├── main.py
+│   ├── database.py
+│   └── ui.py
+│
+├── unified_alert_dashboard/            ← MODULE 6 — Critical Alert System
+│   ├── __init__.py
+│   ├── main.py
+│   └── ui.py
+│
+├── dashboard-Tkinter/                  ← MODULE 7 — Analytics Dashboard (Tkinter)
 │   ├── main.py
 │   ├── config.py
 │   ├── data_source.py
@@ -55,33 +84,7 @@ Smart Cardiology Document Processing/
 │   ├── dashboard_app.py
 │   └── dashboard_widgets.py
 │
-├── analytics_dashboard-pyQt/           ← MODULE 7 - PyQt5 version (done)
-│   ├── main.py
-│   ├── config.py
-│   ├── sample_data.py
-│   ├── charts.py
-│   ├── dashboard_app.py
-│   └── dashboard_widgets.py
-│
-├── ocr_nlp/                            ← MODULE 1 (teammate creates this)
-│   ├── __init__.py
-│   ├── main.py
-│   ├── database.py                     ← Must follow wrapper pattern below
-│   └── ui.py
-│
-├── ecg_analysis/                       ← MODULE 2 (teammate creates this)
-│   ├── __init__.py
-│   ├── main.py
-│   ├── database.py
-│   └── ui.py
-│
-├── report_generation/                  ← MODULE 5 (teammate creates this)
-│   ├── __init__.py
-│   ├── main.py
-│   ├── database.py
-│   └── ui.py
-│
-└── critical_alerts/                    ← MODULE 6 (teammate creates this)
+└── offline_sync/                       ← MODULE 8 — Offline Data Capture (NOT BUILT YET)
     ├── __init__.py
     ├── main.py
     ├── database.py
@@ -195,7 +198,7 @@ This will INSERT a new patient or UPDATE existing fields if the patient_id alrea
 
 ## 7. Database Tables — Complete Schema
 
-The database has 7 tables. All are auto-created when `init_db()` is called.
+The database has 9 tables. All are auto-created when `init_db()` is called.
 
 ### 7.1 `tbl_centers` (pre-populated, read-only)
 
@@ -440,19 +443,108 @@ def create_alert(patient_id, alert_type, message, prediction_id=None):
         )
 ```
 
-### 7.7 `tbl_sync_status` (future use)
+### 7.7 `tbl_integrated_summaries` (Module 4 owns this)
 
 ```sql
-CREATE TABLE tbl_sync_status (
-    local_record_id TEXT PRIMARY KEY,
-    module_name     TEXT NOT NULL,
-    sync_status     TEXT NOT NULL,
-    device_id       TEXT,
-    last_sync_time  TEXT
+CREATE TABLE tbl_integrated_summaries (
+    summary_id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id            TEXT NOT NULL,     -- "P-0001"
+    report_id             TEXT,              -- links to tbl_reports
+    ecg_id                TEXT,              -- links to tbl_ecg_data
+    prediction_id         INTEGER,           -- links to tbl_ai_predictions
+    ai_summary            TEXT,              -- AI-generated clinical summary
+    key_findings          TEXT,              -- extracted key findings
+    critical_observations TEXT,              -- critical alerts/observations
+    followup_recommendation TEXT,            -- follow-up advice
+    Doctor_notes          TEXT,              -- doctor's notes
+    generated_pdf_path    TEXT,              -- file path if PDF was exported
+    created_at            TEXT NOT NULL      -- "2026-05-06 10:30:00"
 );
 ```
 
-Reserved for multi-device sync. Ignore for now.
+Module 4 reads data from ALL other tables for a patient, generates a unified clinical summary, and saves it here. It can also export the summary as a PDF.
+
+**Available helper functions (already in shared/database.py):**
+- `fetch_patient_ids(limit)` — list of all patient IDs for the search dropdown
+- `fetch_latest_integrated_data(patient_id)` — returns patient + report + ECG + prediction + latest summary
+- `fetch_integrated_report_history(patient_id, limit)` — previous summaries for history panel
+- `save_integrated_summary(data)` — saves a summary, returns `summary_id`
+- `fetch_unified_alerts(patient_id, severity)` — alerts with severity filtering
+
+### 7.8 `tbl_sync_status` (Module 8 owns this — NOT BUILT YET)
+
+```sql
+CREATE TABLE tbl_sync_status (
+    local_record_id TEXT PRIMARY KEY,   -- unique ID for the local record
+    module_name     TEXT NOT NULL,      -- "MODULE_1", "MODULE_2", etc.
+    sync_status     TEXT NOT NULL,      -- "PENDING", "SYNCED", "FAILED"
+    device_id       TEXT,               -- device identifier
+    last_sync_time  TEXT                -- "2026-05-06 10:30:00"
+);
+```
+
+**Company spec for Module 8 — Offline Data Capture & Sync:**
+
+This module supports rural areas with low/no internet connectivity. It must:
+1. Allow data entry (patient info, ECG uploads) while offline
+2. Store records locally with `sync_status = 'PENDING'`
+3. When internet is available, sync pending records to the main database
+4. Update `sync_status` to `'SYNCED'` after successful upload
+5. Track which device submitted each record via `device_id`
+6. Show a UI with sync status, last sync time, and pending record count
+
+**Expected UI fields:** Local Record ID, Sync Status, Last Sync Time, Device ID
+
+**Sync status values:** `PENDING`, `SYNCED`, `FAILED`
+
+**Example usage for whoever builds Module 8:**
+```python
+from database import get_connection, init_db, now_text
+import uuid
+
+def save_offline_record(module_name, device_id):
+    """Mark a locally-saved record as pending sync."""
+    init_db()
+    record_id = f"SYNC-{uuid.uuid4().hex[:8].upper()}"
+    with get_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO tbl_sync_status (
+                local_record_id, module_name, sync_status,
+                device_id, last_sync_time
+            )
+            VALUES (?, ?, 'PENDING', ?, ?)
+            """,
+            (record_id, module_name, device_id, now_text()),
+        )
+    return record_id
+
+def mark_as_synced(local_record_id):
+    """Update status after successful sync."""
+    init_db()
+    with get_connection() as conn:
+        conn.execute(
+            """
+            UPDATE tbl_sync_status
+            SET sync_status = 'SYNCED', last_sync_time = ?
+            WHERE local_record_id = ?
+            """,
+            (now_text(), local_record_id),
+        )
+
+def fetch_pending_records(device_id=None):
+    """Get all records waiting to be synced."""
+    init_db()
+    query = "SELECT * FROM tbl_sync_status WHERE sync_status = 'PENDING'"
+    params = []
+    if device_id:
+        query += " AND device_id = ?"
+        params.append(device_id)
+    query += " ORDER BY last_sync_time DESC"
+    with get_connection() as conn:
+        conn.row_factory = __import__("sqlite3").Row
+        return [dict(r) for r in conn.execute(query, params).fetchall()]
+```
 
 ---
 
@@ -539,42 +631,55 @@ from .ui import launch
 ## 9. Data Flow Between Modules
 
 ```
-Module 1 (OCR + NLP)
+Module 1 (OCR + NLP)                          ✅ Built
     │
     ├── Writes patient info ──────► tbl_patients
     ├── Writes extracted reports ──► tbl_reports
     │
     ▼
-Module 2 (ECG Analysis)
+Module 2 (ECG Analysis)                       ✅ Built
     │
     ├── Reads patient from ────────► tbl_patients
     ├── Writes ECG results ────────► tbl_ecg_data
     │
     ▼
-Module 3 (Cardiac Risk Prediction)  ← ALREADY DONE
+Module 3 (Cardiac Risk Prediction)            ✅ Built
     │
     ├── Reads patient + ECG from ──► tbl_patients, tbl_ecg_data
     ├── Writes predictions ────────► tbl_ai_predictions
     ├── Auto-creates HIGH alerts ──► tbl_alerts
     │
     ▼
-Module 5 (Report Generation)
+Module 4 (Report Summarization)               ✅ Built
     │
-    ├── Reads all data from ───────► tbl_patients, tbl_reports,
-    │                                 tbl_ecg_data, tbl_ai_predictions
-    ├── Generates PDF/printable reports
-    │
-    ▼
-Module 6 (Critical Alerts)
-    │
-    ├── Reads predictions from ────► tbl_ai_predictions
-    ├── Reads/writes alerts ───────► tbl_alerts
-    ├── Updates status: OPEN → ACKNOWLEDGED → RESOLVED
+    ├── Reads ALL tables ──────────► tbl_patients, tbl_reports,
+    │                                 tbl_ecg_data, tbl_ai_predictions,
+    │                                 tbl_alerts
+    ├── Writes summaries ──────────► tbl_integrated_summaries
+    ├── Exports PDF reports
     │
     ▼
-Module 7 (Analytics Dashboard)  ← ALREADY DONE
+Module 5 (Tele-Cardiology)                    ❌ Not built
     │
-    └── Reads everything from ─────► ALL tables (read-only)
+    ├── Will read patient data, ECG, and risk scores
+    ├── Will output: diagnosis, urgency, action, referral
+    │
+    ▼
+Module 6 (Critical Alert System)              ✅ Built
+    │
+    ├── Reads alerts from ─────────► tbl_alerts
+    ├── Displays with severity filtering (CRITICAL/HIGH/MODERATE/LOW)
+    │
+    ▼
+Module 7 (Analytics Dashboard)                ✅ Built
+    │
+    ├── Reads everything from ─────► ALL tables (read-only)
+    │
+    ▼
+Module 8 (Offline Sync)                       ❌ Not built
+    │
+    ├── Will track sync status ────► tbl_sync_status
+    ├── Will support offline data entry in rural areas
 ```
 
 ---
@@ -675,8 +780,10 @@ Before merging, every module must insert 5 sample rows so other modules can test
 All teammates must install these packages:
 
 ```
-pip install pandas numpy scikit-learn xgboost matplotlib
+pip install pandas numpy scikit-learn xgboost matplotlib reportlab
 ```
+
+- `reportlab` is required by Module 4 for PDF generation.
 
 If using PyQt5 dashboard version, also:
 ```
