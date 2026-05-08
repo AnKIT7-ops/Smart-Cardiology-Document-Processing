@@ -188,6 +188,25 @@ def init_db():
             """
         )
 
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS tbl_integrated_summaries (
+                summary_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                patient_id TEXT NOT NULL,
+                report_id TEXT,
+                ecg_id TEXT,
+                prediction_id INTEGER,
+                ai_summary TEXT,
+                key_findings TEXT,
+                critical_observations TEXT,
+                followup_recommendation TEXT,
+                Doctor_notes TEXT,
+                generated_pdf_path TEXT,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+
         _create_indexes(conn)
         _migrate_legacy_predictions(conn)
 
@@ -487,3 +506,225 @@ def fetch_latest_patient_context(patient_id):
         "patient": dict(patient) if patient else None,
         "ecg": dict(ecg) if ecg else None,
     }
+
+
+# ================================================================
+# Functions for Module 4 (Integrated Clinical Summary) and
+# Module 6 (Unified Alert Dashboard)
+# ================================================================
+
+
+def fetch_patient_ids(limit=None):
+    """Return a list of all patient_id strings, newest first."""
+    init_db()
+    query = """
+        SELECT patient_id FROM tbl_patients
+        ORDER BY datetime(updated_at) DESC
+    """
+    params = ()
+    if limit is not None:
+        query += " LIMIT ?"
+        params = (int(limit),)
+
+    with get_connection() as conn:
+        rows = conn.execute(query, params).fetchall()
+    return [row[0] for row in rows]
+
+
+def fetch_latest_integrated_data(patient_id):
+    """
+    Return patient, report, ECG, prediction, and latest summary data
+    for the given patient. Used by Module 4 to build the clinical summary.
+    """
+    init_db()
+    with get_connection() as conn:
+        conn.row_factory = sqlite3.Row
+
+        patient = conn.execute(
+            """
+            SELECT p.patient_id, p.patient_name, p.age, p.gender,
+                   p.center_id, c.center_name AS center
+            FROM tbl_patients p
+            LEFT JOIN tbl_centers c ON c.center_id = p.center_id
+            WHERE p.patient_id = ?
+            """,
+            (patient_id,),
+        ).fetchone()
+
+        report = conn.execute(
+            """
+            SELECT report_id, upload_id, patient_id, center_id,
+                   document_type, extracted_text, diagnosis_text,
+                   doctor_notes, confidence_score, status, created_at
+            FROM tbl_reports
+            WHERE patient_id = ? AND status = 'COMPLETED'
+            ORDER BY datetime(created_at) DESC
+            LIMIT 1
+            """,
+            (patient_id,),
+        ).fetchone()
+
+        ecg = conn.execute(
+            """
+            SELECT ecg_id, patient_id, center_id, heart_rate,
+                   rhythm_type, abnormality_detected, st_change,
+                   confidence_score, ai_remarks, status, created_at
+            FROM tbl_ecg_data
+            WHERE patient_id = ? AND status = 'COMPLETED'
+            ORDER BY datetime(created_at) DESC
+            LIMIT 1
+            """,
+            (patient_id,),
+        ).fetchone()
+
+        prediction = conn.execute(
+            """
+            SELECT prediction_id, patient_id, center_id, center_name,
+                   doctor_name, age, gender, bp, cholesterol, diabetes,
+                   smoking, ecg_result, risk_level, probability,
+                   suggested_action, followup_required, model_used,
+                   source_module, created_at
+            FROM tbl_ai_predictions
+            WHERE patient_id = ?
+            ORDER BY datetime(created_at) DESC, prediction_id DESC
+            LIMIT 1
+            """,
+            (patient_id,),
+        ).fetchone()
+
+        latest_summary = conn.execute(
+            """
+            SELECT summary_id, patient_id, report_id, ecg_id,
+                   prediction_id, ai_summary, key_findings,
+                   critical_observations, followup_recommendation,
+                   Doctor_notes, generated_pdf_path, created_at
+            FROM tbl_integrated_summaries
+            WHERE patient_id = ?
+            ORDER BY datetime(created_at) DESC, summary_id DESC
+            LIMIT 1
+            """,
+            (patient_id,),
+        ).fetchone()
+
+    return {
+        "patient": dict(patient) if patient else None,
+        "report": dict(report) if report else None,
+        "ecg": dict(ecg) if ecg else None,
+        "prediction": dict(prediction) if prediction else None,
+        "latest_summary": dict(latest_summary) if latest_summary else None,
+    }
+
+
+def fetch_integrated_report_history(patient_id=None, limit=200):
+    """Return previously generated integrated summaries, newest first."""
+    init_db()
+    query = """
+        SELECT summary_id, patient_id, report_id, ecg_id,
+               prediction_id, ai_summary, key_findings,
+               critical_observations, followup_recommendation,
+               Doctor_notes, generated_pdf_path, created_at
+        FROM tbl_integrated_summaries
+    """
+    params = []
+    if patient_id:
+        query += " WHERE patient_id = ?"
+        params.append(patient_id)
+    query += " ORDER BY datetime(created_at) DESC, summary_id DESC"
+    if limit is not None:
+        query += " LIMIT ?"
+        params.append(int(limit))
+
+    with get_connection() as conn:
+        conn.row_factory = sqlite3.Row
+        return [dict(row) for row in conn.execute(query, params).fetchall()]
+
+
+def save_integrated_summary(data):
+    """
+    Save one Module 4 integrated clinical summary and return the summary_id.
+
+    Expected keys: patient_id, report_id, ecg_id, prediction_id,
+    ai_summary, key_findings, critical_observations,
+    followup_recommendation, Doctor_notes, generated_pdf_path, created_at.
+    """
+    init_db()
+    created_at = data.get("created_at") or now_text()
+    with get_connection() as conn:
+        cursor = conn.execute(
+            """
+            INSERT INTO tbl_integrated_summaries (
+                patient_id, report_id, ecg_id, prediction_id,
+                ai_summary, key_findings, critical_observations,
+                followup_recommendation, Doctor_notes,
+                generated_pdf_path, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(data.get("patient_id") or ""),
+                data.get("report_id"),
+                data.get("ecg_id"),
+                data.get("prediction_id"),
+                data.get("ai_summary"),
+                data.get("key_findings"),
+                data.get("critical_observations"),
+                data.get("followup_recommendation"),
+                data.get("Doctor_notes"),
+                data.get("generated_pdf_path"),
+                created_at,
+            ),
+        )
+        return cursor.lastrowid
+
+
+def fetch_unified_alerts(patient_id=None, severity=None):
+    """
+    Return alerts from tbl_alerts in the unified format expected by
+    Module 4 and Module 6. Maps existing alert fields to the standard
+    alert schema (alert_source, severity, timestamp).
+    """
+    init_db()
+    query = """
+        SELECT a.alert_id, a.patient_id, a.prediction_id,
+               a.alert_type, a.message, a.status, a.created_at
+        FROM tbl_alerts a
+        WHERE 1=1
+    """
+    params = []
+    if patient_id:
+        query += " AND a.patient_id = ?"
+        params.append(patient_id)
+    query += " ORDER BY datetime(a.created_at) DESC, a.alert_id DESC"
+
+    with get_connection() as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(query, params).fetchall()
+
+    alerts = []
+    for row in rows:
+        row_dict = dict(row)
+        alert_type = str(row_dict.get("alert_type") or "").strip()
+        if "critical" in alert_type.lower():
+            sev = "CRITICAL"
+        elif "high" in alert_type.lower():
+            sev = "HIGH"
+        elif "moderate" in alert_type.lower() or "medium" in alert_type.lower():
+            sev = "MODERATE"
+        else:
+            sev = "LOW"
+
+        if severity and sev != severity.upper():
+            continue
+
+        alerts.append({
+            "alert_id": row_dict.get("alert_id"),
+            "patient_id": row_dict.get("patient_id"),
+            "alert_source": "Risk Prediction",
+            "alert_type": alert_type,
+            "severity": sev,
+            "message": row_dict.get("message", ""),
+            "timestamp": row_dict.get("created_at", ""),
+            "status": row_dict.get("status", "OPEN"),
+        })
+
+    return alerts
