@@ -4,23 +4,31 @@
 # Purpose: Tkinter GUI for patient data input and risk display
 # ============================================================
 #
-# FUTURE INTEGRATION NOTE:
-# -----------------------------------------------------------------
-# The "ECG Result" dropdown currently takes manual input.
-# When Module 2 (ECG Signal Analysis) is connected:
-#   1. Add a "Load ECG from Module 2" button.
-#   2. Import the Module 2 result (e.g., ecg_analysis.get_result()).
-#   3. Auto-fill the ECG dropdown with the Module 2 output.
-#   4. The rest of the prediction pipeline stays unchanged.
-# -----------------------------------------------------------------
+# INTEGRATION:
+#   - "Load Patient" button reads patient + ECG data from Modules 1 & 2
+#   - ECG Result dropdown auto-fills from Module 2's tbl_ecg_data
+#   - High-risk predictions create alerts for Module 6
+# ============================================================
 
+import os
+import sys
 import tkinter as tk
 from tkinter import messagebox
 import numpy as np
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from model import CardiacRiskModel
 from database import init_db, next_patient_id, save_prediction
 from preprocess import prepare_input
+from shared.database import (
+    fetch_latest_patient_context,
+    fetch_patient_ids,
+    get_connection,
+    now_text,
+)
 
 
 # ======================== COLOR PALETTE ========================
@@ -120,9 +128,15 @@ class CardiacRiskApp:
         self.entries = {}
         row = 1
 
-        # Patient ID
+        # Patient ID + Load Patient button
         self.entries["patient_id"] = self._add_entry(card, "Patient ID:", row)
         self._set_next_patient_id()
+        tk.Button(
+            card, text="Load Patient", font=("Arial", 9),
+            bg="#0ea5e9", fg="white", padx=8, pady=2,
+            cursor="hand2", relief="flat",
+            command=self._load_patient_from_db,
+        ).grid(row=row, column=2, padx=(4, 10), pady=4, sticky="w")
         row += 1
 
         # Center
@@ -348,6 +362,8 @@ class CardiacRiskApp:
                 text=f"Saved Record:  {saved_patient_id}",
                 fg=SUCCESS
             )
+            # Create alert for Module 6 if high risk
+            self._create_alert_if_high_risk(saved_patient_id, result)
             self._set_next_patient_id()
 
 
@@ -397,7 +413,152 @@ class CardiacRiskApp:
         except Exception:
             self.storage_ready = False
 
+    # ---- LOAD FROM PREVIOUS MODULES ----
 
+    def _is_new_patient_placeholder(self, patient_id):
+        try:
+            return patient_id == next_patient_id()
+        except Exception:
+            return False
+
+    def _open_patient_picker(self, notice=None):
+        try:
+            ids = fetch_patient_ids(limit=50)
+        except Exception as exc:
+            messagebox.showerror("Database Error", str(exc))
+            return False
+
+        if not ids:
+            messagebox.showinfo(
+                "No Patients",
+                "No patients found in the shared database.\n\nUse Module 1 or 2 first to register a patient.",
+            )
+            return False
+
+        pick = tk.Toplevel(self.root)
+        pick.title("Select Patient")
+        pick.geometry("300x360")
+        pick.configure(bg=BG)
+        tk.Label(
+            pick,
+            text=notice or "Select an existing Patient ID:",
+            bg=BG,
+            fg=TEXT,
+            font=("Arial", 10, "bold"),
+            wraplength=260,
+            justify="left",
+        ).pack(pady=(10, 5), padx=10, anchor="w")
+        listbox = tk.Listbox(pick, font=("Arial", 10), height=12)
+        for pid in ids:
+            listbox.insert("end", pid)
+        listbox.pack(padx=10, fill="both", expand=True)
+
+        def on_select():
+            sel = listbox.curselection()
+            if not sel:
+                return
+            self.entries["patient_id"].delete(0, "end")
+            self.entries["patient_id"].insert(0, listbox.get(sel[0]))
+            pick.destroy()
+            self._load_patient_from_db()
+
+        listbox.bind("<Double-1>", lambda _event: on_select())
+        tk.Button(
+            pick,
+            text="Load",
+            bg=PRIMARY,
+            fg="white",
+            font=("Arial", 10, "bold"),
+            command=on_select,
+        ).pack(pady=8)
+        return True
+
+    def _load_patient_from_db(self):
+        """Load patient data + latest ECG result from Modules 1 & 2."""
+        patient_id = self.entries["patient_id"].get().strip()
+        if not patient_id or self._is_new_patient_placeholder(patient_id):
+            self._open_patient_picker()
+            return
+
+        try:
+            ctx = fetch_latest_patient_context(patient_id)
+        except Exception as exc:
+            messagebox.showerror("Database Error", str(exc))
+            return
+
+        if not ctx or not any(ctx.values()):
+            opened = self._open_patient_picker(
+                f"No data found for {patient_id}. Select an existing patient instead:"
+            )
+            if not opened:
+                messagebox.showinfo("No Data", f"No data found for {patient_id}.\n\nRun Module 1 or 2 first.")
+            return
+
+        patient = ctx.get("patient") or {}
+        ecg = ctx.get("ecg") or {}
+
+        # Auto-fill patient demographics
+        if patient.get("age"):
+            self.entries["age"].delete(0, "end")
+            self.entries["age"].insert(0, str(patient["age"]))
+        if patient.get("gender"):
+            self.entries["gender"].set(patient["gender"])
+        if patient.get("center"):
+            center_name = patient["center"]
+            if center_name in CENTER_OPTIONS:
+                self.entries["center"].set(center_name)
+
+        # Auto-fill ECG result from Module 2
+        if ecg:
+            ecg_mapping = self._map_ecg_to_dropdown(ecg)
+            self.entries["ecg"].set(ecg_mapping)
+            self.saved_label.config(
+                text=f"Loaded patient + ECG data for {patient_id}",
+                fg="#0ea5e9"
+            )
+        else:
+            self.saved_label.config(
+                text=f"Loaded patient {patient_id} (no ECG data yet — run Module 2)",
+                fg=WARNING
+            )
+
+    def _map_ecg_to_dropdown(self, ecg_data):
+        """Map Module 2 ECG results to Module 3 dropdown options."""
+        abnormality = (ecg_data.get("abnormality_detected") or "").strip()
+        st_change = (ecg_data.get("st_change") or "").strip()
+
+        if abnormality == "LV Hypertrophy":
+            return "LV Hypertrophy"
+        if abnormality in ("ST Depression", "ST Elevation") or st_change in ("ST Depression", "ST Elevation"):
+            return "ST-T Abnormality"
+        if abnormality not in ("", "No", "Normal"):
+            return "ST-T Abnormality"  # Other abnormalities
+        return "Normal"
+
+    # ---- ALERT GENERATION ----
+
+    def _create_alert_if_high_risk(self, patient_id, result):
+        """Create an alert in tbl_alerts for Module 6 when risk is High."""
+        if result.get("risk_level") != "High":
+            return
+        try:
+            with get_connection() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO tbl_alerts (
+                        patient_id, prediction_id, alert_type, message,
+                        status, created_at
+                    )
+                    VALUES (?, NULL, 'High Risk Prediction', ?, 'OPEN', ?)
+                    """,
+                    (
+                        patient_id,
+                        f"Module 3: {result['risk_level']} risk ({result['probability']:.0f}%) — {result['action']}",
+                        now_text(),
+                    ),
+                )
+        except Exception:
+            pass  # Don't fail the prediction if alert creation fails
 
     def _clear(self):
         """Reset all input fields and result labels."""
@@ -430,4 +591,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = CardiacRiskApp(root)
     root.mainloop()
-

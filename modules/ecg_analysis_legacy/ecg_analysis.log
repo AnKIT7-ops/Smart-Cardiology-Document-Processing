@@ -73,3 +73,9 @@
 2026-05-08 23:04:47,597 [INFO] Saved ECG result ECG-0004: Ventricular Tachycardia
 2026-05-08 23:29:47,751 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
 2026-05-08 23:29:47,770 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\ecg analysis\ecg_model.pkl v1.0.0-GBT
+2026-05-09 00:06:14,098 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
+2026-05-09 00:06:14,116 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\modules\ecg_analysis_legacy\ecg_model.pkl v1.0.0-GBT
+2026-05-09 00:06:52,610 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
+2026-05-09 00:06:52,627 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\modules\ecg_analysis_legacy\ecg_model.pkl v1.0.0-GBT
+2026-05-09 00:33:36,144 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
+2026-05-09 00:33:36,166 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\modules\ecg_analysis_legacy\ecg_model.pkl v1.0.0-GBT

@@ -1,4 +1,5 @@
 import os
+import re
 import sqlite3
 from datetime import datetime
 
@@ -362,6 +363,108 @@ def upsert_patient(patient_id, age=None, gender=None, center=None, patient_name=
                 timestamp,
             ),
         )
+
+
+def _as_plain_dict(value):
+    if isinstance(value, dict):
+        return value
+    if hasattr(value, "to_dict"):
+        return value.to_dict()
+    return vars(value)
+
+
+def _int_or_none(value):
+    match = re.search(r"\d+", str(value or ""))
+    return int(match.group(0)) if match else None
+
+
+def _normalized_gender(value):
+    text = str(value or "").strip().lower()
+    if text in {"m", "male"}:
+        return "Male"
+    if text in {"f", "female"}:
+        return "Female"
+    return str(value or "").strip() or None
+
+
+def _raw_lines_text(raw_lines):
+    lines = []
+    for item in raw_lines or []:
+        if isinstance(item, dict):
+            text = item.get("text")
+        elif isinstance(item, (list, tuple)) and item:
+            text = item[0]
+        else:
+            text = item
+        text = str(text or "").strip()
+        if text:
+            lines.append(text)
+    return "\n".join(lines)
+
+
+def save_ocr_report(meta, extracted):
+    """
+    Save Module 1 OCR/NLP output into the shared integration tables.
+
+    Module 1 still keeps its own local upload history, but later modules read
+    patient/report context from smart_cardiology.db.
+    """
+    init_db()
+    meta_data = _as_plain_dict(meta)
+    extracted_data = _as_plain_dict(extracted)
+
+    upload_id = str(meta_data.get("upload_id") or "").strip()
+    report_id = str(meta_data.get("report_id") or "").strip()
+    if not report_id:
+        report_id = f"RPT-{upload_id}" if upload_id else f"RPT-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+    patient_id = str(meta_data.get("patient_id") or "").strip() or next_patient_id()
+    center_id = center_id_for(meta_data.get("center_id"))
+    created_at = now_text()
+
+    patient_name = str(extracted_data.get("patient_name") or "").strip() or None
+    age = _int_or_none(extracted_data.get("age"))
+    gender = _normalized_gender(extracted_data.get("gender"))
+
+    raw_text = _raw_lines_text(extracted_data.get("raw_lines"))
+    diagnosis = str(extracted_data.get("diagnosis_text") or "").strip()
+    notes = str(extracted_data.get("doctor_notes") or "").strip()
+    confidence = float(extracted_data.get("confidence_score") or 0.0)
+
+    upsert_patient(
+        patient_id=patient_id,
+        patient_name=patient_name,
+        age=age,
+        gender=gender,
+        center=center_id,
+        source_module="MODULE_1",
+    )
+
+    with get_connection() as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO tbl_reports (
+                report_id, upload_id, patient_id, center_id, document_type,
+                extracted_text, diagnosis_text, doctor_notes,
+                confidence_score, status, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'COMPLETED', ?)
+            """,
+            (
+                report_id,
+                upload_id,
+                patient_id,
+                center_id,
+                meta_data.get("document_type"),
+                raw_text,
+                diagnosis,
+                notes,
+                confidence,
+                created_at,
+            ),
+        )
+
+    return report_id
 
 
 def save_prediction(data):

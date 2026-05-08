@@ -12,6 +12,7 @@ if PROJECT_ROOT not in sys.path:
 
 from shared.database import (  # noqa: E402
     DB_PATH,
+    fetch_patient_ids,
     init_db,
     next_patient_id,
     now_text,
@@ -578,10 +579,57 @@ class TeleCardiologyApp:
         except Exception:
             self.vars["patient_id"].set("")
 
+    def _is_new_patient_placeholder(self, patient_id):
+        try:
+            return patient_id == next_patient_id()
+        except Exception:
+            return False
+
+    def _open_patient_picker(self, notice=None):
+        try:
+            ids = fetch_patient_ids(limit=50)
+        except Exception as exc:
+            messagebox.showerror("Database Error", str(exc))
+            return False
+
+        if not ids:
+            messagebox.showinfo("No Patients", "No patients found in the shared database.")
+            return False
+
+        pick = tk.Toplevel(self.root)
+        pick.title("Select Patient")
+        pick.geometry("300x360")
+        pick.configure(bg=BG)
+        tk.Label(
+            pick,
+            text=notice or "Select an existing Patient ID:",
+            bg=BG,
+            fg=TEXT,
+            font=("Segoe UI", 10, "bold"),
+            wraplength=260,
+            justify="left",
+        ).pack(pady=(10, 5), padx=10, anchor="w")
+        listbox = tk.Listbox(pick, font=("Segoe UI", 10), height=12)
+        for pid in ids:
+            listbox.insert("end", pid)
+        listbox.pack(padx=10, fill="both", expand=True)
+
+        def on_select():
+            selected = listbox.curselection()
+            if not selected:
+                return
+            self.vars["patient_id"].set(listbox.get(selected[0]))
+            pick.destroy()
+            self._load_from_db()
+
+        listbox.bind("<Double-1>", lambda _event: on_select())
+        ttk.Button(pick, text="Load", command=on_select).pack(pady=8)
+        return True
+
     def _load_from_db(self):
         patient_id = self.vars["patient_id"].get().strip()
-        if not patient_id:
-            messagebox.showwarning("Missing Patient ID", "Enter a Patient ID to load.")
+        if not patient_id or self._is_new_patient_placeholder(patient_id):
+            self._open_patient_picker()
             return
 
         try:
@@ -591,7 +639,11 @@ class TeleCardiologyApp:
             return
 
         if not context or not any(context.values()):
-            messagebox.showinfo("No Data", f"No records found for {patient_id}.")
+            opened = self._open_patient_picker(
+                f"No records found for {patient_id}. Select an existing patient instead:"
+            )
+            if not opened:
+                messagebox.showinfo("No Data", f"No records found for {patient_id}.")
             return
 
         patient = context.get("patient") or {}

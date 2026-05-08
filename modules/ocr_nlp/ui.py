@@ -1,11 +1,18 @@
 import uuid
 import threading
 import datetime
+import os
+import sys
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from main import UploadMeta, run_pipeline  
 from database import DatabaseWrapper
+from shared.database import save_ocr_report
 
 
 C = {
@@ -261,15 +268,35 @@ class UploadPage(tk.Frame):
             extracted = run_pipeline(meta)
             self._db.save_upload(meta)
             self._db.save_extracted(meta.upload_id, extracted)
-            self.after(0, self._done, meta.upload_id, extracted.confidence_score)
+            shared_report_id = None
+            shared_error = None
+            try:
+                shared_report_id = save_ocr_report(meta, extracted)
+            except Exception as exc:
+                shared_error = str(exc)
+            self.after(
+                0,
+                self._done,
+                meta.upload_id,
+                extracted.confidence_score,
+                shared_report_id,
+                shared_error,
+            )
         except Exception as exc:
             self.after(0, self._fail, str(exc))
 
-    def _done(self, uid, conf):
+    def _done(self, uid, conf, shared_report_id=None, shared_error=None):
         self._progress.stop(); self._progress.pack_forget()
         self._btn.config(state="normal")
         col = C["success"] if conf >= 80 else C["warning"] if conf >= 50 else C["error"]
-        self._set_status(f"✅ Done!  Confidence: {conf:.1f}%", col)
+        if shared_error:
+            self._set_status(
+                f"Done locally. Shared DB sync failed: {shared_error}",
+                C["warning"],
+            )
+        else:
+            suffix = f"  |  Shared report: {shared_report_id}" if shared_report_id else ""
+            self._set_status(f"Done!  Confidence: {conf:.1f}%{suffix}", col)
         self._on_done(uid)
 
     def _fail(self, msg):
