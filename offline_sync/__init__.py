@@ -1,4 +1,4 @@
-from database import (
+ database import (
     init_db,
     get_connection,
     now_text,
@@ -12,7 +12,7 @@ from database import (
 )
 
 from main import (
-    is_online,
+    is_main_db_accessible,
     run_sync_cycle,
     start_scheduler,
     stop_scheduler,
@@ -33,7 +33,7 @@ __all__ = [
     "count_by_status",
     "delete_record",
     # main / sync engine
-    "is_online",
+    "is_main_db_accessible",
     "run_sync_cycle",
     "start_scheduler",
     "stop_scheduler",
