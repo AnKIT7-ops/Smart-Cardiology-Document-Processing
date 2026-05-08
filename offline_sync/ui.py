@@ -15,7 +15,8 @@ from main import (
     stop_scheduler,
     scheduler_is_running,
     on_sync_done,
-    is_online,
+    is_main_db_accessible,
+    MAIN_DB_PATH,
 )
 
 BG_DARK    = "#1A1D2E"
@@ -37,6 +38,8 @@ STATUS_COLORS = {
 
 DEVICE_ID = "DEV-MANGALURU-01"    
 
+
+
 class SyncDashboard(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -56,7 +59,6 @@ class SyncDashboard(tk.Tk):
         self._poll_online_status()
 
 
-
     def _build_ui(self):
         top = tk.Frame(self, bg=BG_DARK, pady=10)
         top.pack(fill="x", padx=20)
@@ -67,16 +69,16 @@ class SyncDashboard(tk.Tk):
             font=("Segoe UI", 15, "bold"),
         ).pack(side="left")
 
-        self._online_var = tk.StringVar(value="● Checking…")
-        self._online_lbl = tk.Label(
-            top, textvariable=self._online_var,
+        self._db_var = tk.StringVar(value="● Checking DB…")
+        self._db_lbl = tk.Label(
+            top, textvariable=self._db_var,
             bg=BG_DARK, fg=TEXT_MUTED,
             font=("Segoe UI", 10, "bold"),
         )
-        self._online_lbl.pack(side="right", padx=(0, 10))
+        self._db_lbl.pack(side="right", padx=(0, 10))
 
         tk.Label(
-            top, text=f"Device: {DEVICE_ID}",
+            top, text=f"Target DB: {MAIN_DB_PATH}",
             bg=BG_DARK, fg=TEXT_MUTED,
             font=("Segoe UI", 9),
         ).pack(side="right", padx=20)
@@ -165,6 +167,7 @@ class SyncDashboard(tk.Tk):
         self._tree.pack(side="left", fill="both", expand=True)
         vsb.pack(side="right", fill="y")
 
+        # ── Status bar ───────────────────────
         self._status_var = tk.StringVar(value="Ready.")
         tk.Label(
             self, textvariable=self._status_var,
@@ -172,7 +175,7 @@ class SyncDashboard(tk.Tk):
             font=("Segoe UI", 9), anchor="w", padx=20,
         ).pack(fill="x", pady=(0, 6))
 
-
+  
     def _refresh_table(self):
         self._tree.delete(*self._tree.get_children())
         for rec in fetch_all_records():
@@ -206,8 +209,6 @@ class SyncDashboard(tk.Tk):
         rows.sort()
         for idx, (_, iid) in enumerate(rows):
             self._tree.move(iid, "", idx)
-
-   
 
     def _manual_sync(self):
         self._status_var.set("Syncing…")
@@ -247,7 +248,7 @@ class SyncDashboard(tk.Tk):
             self._scheduler_btn.config(text="▶  Start Auto-Sync", bg=SUCCESS)
         self.after(2000, self._update_scheduler_btn)
 
-
+  
     def _open_add_dialog(self):
         dlg = tk.Toplevel(self)
         dlg.title("Add Offline Record")
@@ -307,21 +308,22 @@ class SyncDashboard(tk.Tk):
             self._refresh_all()
             self._status_var.set(f"Deleted: {rid}")
 
+
     def _poll_online_status(self):
         def _check():
-            online = is_online()
-            self.after(0, lambda: self._set_online_indicator(online))
+            accessible = is_main_db_accessible()
+            self.after(0, lambda: self._set_db_indicator(accessible))
 
         threading.Thread(target=_check, daemon=True).start()
         self.after(15_000, self._poll_online_status)   # recheck every 15s
 
-    def _set_online_indicator(self, online: bool):
-        if online:
-            self._online_var.set("● Online")
-            self._online_lbl.config(fg=SUCCESS)
+    def _set_db_indicator(self, accessible: bool):
+        if accessible:
+            self._db_var.set("● DB Connected")
+            self._db_lbl.config(fg=SUCCESS)
         else:
-            self._online_var.set("● Offline")
-            self._online_lbl.config(fg=DANGER)
+            self._db_var.set("● DB Not Found")
+            self._db_lbl.config(fg=DANGER)
 
 
     @staticmethod
@@ -332,6 +334,7 @@ class SyncDashboard(tk.Tk):
             font=("Segoe UI", 10, "bold"),
             relief="flat", padx=14, pady=6, cursor="hand2",
         )
+
 
 if __name__ == "__main__":
     app = SyncDashboard()
