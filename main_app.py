@@ -168,18 +168,6 @@ class LauncherApp:
             color = MODULE_COLORS[i % len(MODULE_COLORS)]
             self._module_button(body, f"Module {i+1}", label, icon, folder, method, color)
 
-        # ── Footer ──
-        footer = tk.Frame(self.root, bg=BG)
-        footer.pack(fill="x", padx=28, pady=(0, 14))
-
-        tk.Frame(footer, bg=BORDER, height=1).pack(fill="x", pady=(0, 8))
-        tk.Label(
-            footer,
-            text="All modules share data via  smart_cardiology.db\n"
-                 "Docs:  INTEGRATION_GUIDE_V2.md  |  README.md",
-            bg=BG, fg=MUTED, font=("Segoe UI", 8), justify="center",
-        ).pack()
-
     def _module_button(self, parent, number, label, icon, folder, method, accent_color):
         folder_path = os.path.join(MODULES_DIR, folder)
         exists = os.path.isdir(folder_path)
