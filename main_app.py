@@ -40,7 +40,7 @@ MODULES = [
     ("Critical Alert System",               "🚨", "unified_alert_dashboard",     "package"),
     ("Analytics Dashboard",                 "📊", "analytics_dashboard",         "dashboard"),
     ("Offline Data Capture & Sync",         "🔄", "offline_sync",                "package"),
-]
+]       
 
 # ── Colors ─────────────────────────────────────────────────
 BG          = "#0f172a"

@@ -306,33 +306,83 @@ class IntegratedClinicalSummaryApp:
         alerts = fetch_unified_alerts(patient_id=patient.get("patient_id"))
         critical_alerts = [a for a in alerts if str(a.get("severity", "")).upper() in {"HIGH", "CRITICAL"}]
 
-        ocr_findings = (
-            f"Extracted Text: {report.get('extracted_text') or 'N/A'}\n"
-            f"Diagnosis: {report.get('diagnosis_text') or 'N/A'}"
-        )
-        ecg_findings = (
-            f"HR {ecg.get('heart_rate', 'N/A')} bpm, rhythm {ecg.get('rhythm_type', 'N/A')}, "
-            f"abnormality {ecg.get('abnormality_detected', 'N/A')}, ST {ecg.get('st_change', 'N/A')}"
-        )
-        probability = prediction.get("probability")
-        probability_text = "N/A" if probability in (None, "") else f"{probability}"
-        risk_prediction = (
-            f"Risk {prediction.get('risk_level', 'N/A')} ({probability_text}%), "
-            f"action: {prediction.get('suggested_action', 'N/A')}"
-        )
-        generated_ai_summary = (
-            f"Patient {patient.get('patient_id', 'N/A')} demonstrates OCR findings suggestive of "
-            f"{report.get('diagnosis_text') or 'no definitive diagnosis documented'}. "
-            f"ECG review indicates {ecg.get('abnormality_detected') or ecg.get('rhythm_type') or 'no clear abnormality'} "
-            f"with heart rate {ecg.get('heart_rate', 'N/A')} bpm. "
-            f"Risk prediction currently categorizes the case as {prediction.get('risk_level', 'N/A')} "
-            f"({probability_text}%), supporting {prediction.get('suggested_action', 'continued clinical correlation')}."
-        )
-        generated_key_findings = (
-            f"1) OCR diagnosis: {report.get('diagnosis_text') or 'N/A'}\n"
-            f"2) ECG: {ecg.get('abnormality_detected') or ecg.get('rhythm_type') or 'N/A'}\n"
-            f"3) Risk model: {prediction.get('risk_level', 'N/A')} ({prediction.get('probability', 'N/A')}%)"
-        )
+        dash = '\u2014'  # em-dash fallback
+        # -- OCR Findings --
+        if report:
+            ocr_findings = (
+                f"Extracted Text: {report.get('extracted_text') or 'No text extracted'}\n"
+                f"Diagnosis: {report.get('diagnosis_text') or 'No diagnosis extracted'}"
+            )
+        else:
+            ocr_findings = "No OCR documents scanned for this patient yet.\nUse Module 1 to scan a medical document."
+
+        # -- ECG Findings --
+        if ecg:
+            hr = ecg.get('heart_rate', '\u2014')
+            rhythm = ecg.get('rhythm_type', '\u2014')
+            abnormality = ecg.get('abnormality_detected', '\u2014')
+            st = ecg.get('st_change', '\u2014')
+            if str(abnormality).strip().lower() in ('no', 'none', ''):
+                abnormality = 'None detected'
+            if str(st).strip().lower() in ('no', 'none', 'normal', ''):
+                st = 'Normal'
+            ecg_findings = (
+                f"Heart Rate: {hr} bpm\n"
+                f"Rhythm: {rhythm}\n"
+                f"Abnormality: {abnormality}\n"
+                f"ST Change: {st}\n"
+                f"Confidence: {ecg.get('confidence_score', dash)}"
+            )
+        else:
+            ecg_findings = "No ECG analysis available for this patient yet.\nUse Module 2 to analyze an ECG."
+
+        # -- Risk Prediction --
+        if prediction:
+            probability = prediction.get('probability')
+            prob_text = f"{probability}%" if probability not in (None, '') else '\u2014'
+            risk_prediction = (
+                f"Risk Level: {prediction.get('risk_level', dash)}\n"
+                f"Probability: {prob_text}\n"
+                f"Suggested Action: {prediction.get('suggested_action', dash)}\n"
+                f"Follow-up: {prediction.get('followup_required', dash)}"
+            )
+        else:
+            risk_prediction = "No risk prediction available yet.\nUse Module 3 to predict cardiac risk."
+
+        # -- AI Summary --
+        summary_parts = [f"Patient {patient.get('patient_id', dash)}"]
+        if ecg:
+            ecg_detail = ecg.get('abnormality_detected') or ecg.get('rhythm_type') or 'normal ECG'
+            if str(ecg_detail).strip().lower() in ('no', 'none'):
+                ecg_detail = 'normal ECG'
+            summary_parts.append(f"ECG shows {ecg_detail} with heart rate {ecg.get('heart_rate', dash)} bpm")
+        if prediction:
+            summary_parts.append(
+                f"Risk classified as {prediction.get('risk_level', dash)} "
+                f"({prediction.get('probability', dash)}%)"
+            )
+        if report and report.get('diagnosis_text'):
+            summary_parts.append(f"OCR diagnosis: {report['diagnosis_text']}")
+        generated_ai_summary = ". ".join(summary_parts) + "."
+
+        # -- Key Findings --
+        kf_lines = []
+        if report and report.get('diagnosis_text'):
+            kf_lines.append(f"1) OCR diagnosis: {report['diagnosis_text']}")
+        else:
+            kf_lines.append("1) OCR: Not yet scanned")
+        if ecg:
+            ecg_kf = ecg.get('abnormality_detected') or ecg.get('rhythm_type') or dash
+            if str(ecg_kf).strip().lower() in ('no', 'none'):
+                ecg_kf = f"Normal ({ecg.get('rhythm_type', 'Sinus Rhythm')})"
+            kf_lines.append(f"2) ECG: {ecg_kf}")
+        else:
+            kf_lines.append("2) ECG: Not yet analyzed")
+        if prediction:
+            kf_lines.append(f"3) Risk: {prediction.get('risk_level', dash)} ({prediction.get('probability', dash)}%)")
+        else:
+            kf_lines.append("3) Risk: Not yet predicted")
+        generated_key_findings = "\n".join(kf_lines)
         critical_lines = []
         for alert in critical_alerts[:5]:
             critical_lines.append(
