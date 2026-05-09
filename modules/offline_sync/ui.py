@@ -2,22 +2,40 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 
-from database import (
-    fetch_all_records,
-    count_by_status,
-    save_offline_record,
-    delete_record,
-    init_db,
-)
-from main import (
-    run_sync_cycle,
-    start_scheduler,
-    stop_scheduler,
-    scheduler_is_running,
-    on_sync_done,
-    is_main_db_accessible,
-    MAIN_DB_PATH,
-)
+try:
+    from .database import (
+        fetch_all_records,
+        count_by_status,
+        save_offline_record,
+        delete_record,
+        init_db,
+    )
+    from .main import (
+        run_sync_cycle,
+        start_scheduler,
+        stop_scheduler,
+        scheduler_is_running,
+        on_sync_done,
+        is_main_db_accessible,
+        MAIN_DB_PATH,
+    )
+except ImportError:
+    from database import (
+        fetch_all_records,
+        count_by_status,
+        save_offline_record,
+        delete_record,
+        init_db,
+    )
+    from main import (
+        run_sync_cycle,
+        start_scheduler,
+        stop_scheduler,
+        scheduler_is_running,
+        on_sync_done,
+        is_main_db_accessible,
+        MAIN_DB_PATH,
+    )
 
 BG_DARK    = "#1A1D2E"
 BG_CARD    = "#252840"

@@ -1,4 +1,4 @@
-# Python
+# ── Python ──────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -7,30 +7,27 @@ dist/
 build/
 *.egg
 
-# Virtual environments
-venv/
-env/
-.venv/
+# ── Databases (auto-generated at runtime) ──────────────────
+*.db
+*.db-shm
+*.db-wal
 
-# IDE files
+# ── ML model cache ─────────────────────────────────────────
+modules/cardiac_risk_prediction/*.pkl
+
+# ── IDE / Editor ───────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS files
+# ── OS files ───────────────────────────────────────────────
 Thumbs.db
-Desktop.ini
 .DS_Store
+~$*
 
-# Database (each teammate generates their own locally)
-smart_cardiology.db
-
-# Saved ML models (large binary files, retrain locally)
-cardiac_risk_prediction/saved_models/*.pkl
-
-# Zip archives
-*.zip
-
-# Word temp files
-~$*.docx
+# ── Virtual environments ───────────────────────────────────
+venv/
+.venv/
+env/

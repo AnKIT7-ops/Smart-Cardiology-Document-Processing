@@ -15,8 +15,8 @@ def _missing_deps_launch(parent):
     ).pack(pady=(30, 10))
     tk.Label(
         window,
-        text="This module requires: paddleocr, opencv-python, pymupdf\n\n"
-             "Run:  pip install paddleocr opencv-python pymupdf",
+        text="This module requires: paddlepaddle, paddleocr, opencv-python, pymupdf\n\n"
+             "Run:  python -m pip install paddlepaddle paddleocr opencv-python pymupdf",
         font=("Segoe UI", 10), bg="#f8fafc", fg="#334155",
         justify="center",
     ).pack(pady=10)

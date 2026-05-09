@@ -20,9 +20,14 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from model import CardiacRiskModel
-from database import init_db, next_patient_id, save_prediction
-from preprocess import prepare_input
+try:
+    from .model import CardiacRiskModel
+    from .database import init_db, next_patient_id, save_prediction
+    from .preprocess import prepare_input
+except ImportError:
+    from model import CardiacRiskModel
+    from database import init_db, next_patient_id, save_prediction
+    from preprocess import prepare_input
 from shared.database import (
     fetch_latest_patient_context,
     fetch_patient_ids,
@@ -203,6 +208,8 @@ class CardiacRiskApp:
         menu = tk.OptionMenu(parent, var, *options)
         menu.config(font=("Arial", 10), width=18, relief="solid", bd=1)
         menu.grid(row=row, column=1, padx=10, pady=4, sticky="w")
+        # Store reference to widget for force-refreshing
+        var._menu_widget = menu
         return var
 
     # ---- BUTTONS ----
@@ -497,28 +504,44 @@ class CardiacRiskApp:
         patient = ctx.get("patient") or {}
         ecg = ctx.get("ecg") or {}
 
+        loaded = []  # Track what got filled
+
         # Auto-fill patient demographics
         if patient.get("age"):
             self.entries["age"].delete(0, "end")
             self.entries["age"].insert(0, str(patient["age"]))
+            loaded.append(f"Age={patient['age']}")
+
         if patient.get("gender"):
-            self.entries["gender"].set(patient["gender"])
+            gender = str(patient["gender"]).strip()
+            self.entries["gender"].set(gender)
+            loaded.append(f"Gender={gender}")
+
         if patient.get("center"):
-            center_name = patient["center"]
+            center_name = str(patient["center"]).strip()
             if center_name in CENTER_OPTIONS:
                 self.entries["center"].set(center_name)
+                loaded.append(f"Center={center_name}")
 
         # Auto-fill ECG result from Module 2
         if ecg:
             ecg_mapping = self._map_ecg_to_dropdown(ecg)
             self.entries["ecg"].set(ecg_mapping)
+            ecg_detail = ecg.get("abnormality_detected", "")
+            loaded.append(f"ECG={ecg_mapping} ({ecg_detail})")
+
+        # Force Tkinter to refresh all dropdown visuals
+        self.root.update_idletasks()
+
+        info = ", ".join(loaded) if loaded else "no fields matched"
+        if ecg:
             self.saved_label.config(
-                text=f"Loaded patient + ECG data for {patient_id}",
+                text=f"\u2705 Loaded {patient_id}: {info}",
                 fg="#0ea5e9"
             )
         else:
             self.saved_label.config(
-                text=f"Loaded patient {patient_id} (no ECG data yet — run Module 2)",
+                text=f"\u26a0 Loaded {patient_id}: {info} (no ECG — run Module 2)",
                 fg=WARNING
             )
 

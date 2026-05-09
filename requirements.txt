@@ -17,12 +17,8 @@ xgboost>=1.7
 # ── Module 4: Report Summarization (PDF export) ────────────
 reportlab>=4.0
 
-# ── Module 1: OCR + NLP (optional — heavy packages) ────────
-# Uncomment below ONLY if you are working on Module 1.
-# These are large packages (~1 GB+) and are NOT required
-# for other modules to work.
-#
-# paddlepaddle>=2.5
-# paddleocr>=2.7
-# opencv-python>=4.8
-# PyMuPDF>=1.23
+# Module 1: OCR + NLP
+paddlepaddle>=2.5
+paddleocr>=2.7
+opencv-python>=4.8
+PyMuPDF>=1.23

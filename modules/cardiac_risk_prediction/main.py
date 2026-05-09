@@ -28,7 +28,11 @@
 # -----------------------------------------------------------------
 
 import tkinter as tk
-from ui import CardiacRiskApp
+
+try:
+    from .ui import CardiacRiskApp
+except ImportError:
+    from ui import CardiacRiskApp
 
 
 def main():

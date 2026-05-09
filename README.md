@@ -87,10 +87,8 @@ Smart Cardiology Document Processing/
 ├── main_app.py                          ← 🚀 MAIN LAUNCHER (run this)
 ├── requirements.txt                     ← Python dependencies
 ├── README.md                            ← This file
-├── INTEGRATION_GUIDE_V2.md              ← Full technical integration guide
-├── smart_cardiology.db                  ← Shared SQLite database (auto-created)
+├── .gitignore                           ← Git ignore rules
 ├── heart_disease_uci.csv                ← Training dataset for Module 3
-├── _check_status.py                     ← Integration health check script
 │
 ├── shared/                              ← Shared database layer
 │   ├── __init__.py
@@ -100,7 +98,6 @@ Smart Cardiology Document Processing/
     ├── __init__.py
     ├── ocr_nlp/                         ← Module 1: OCR + NLP
     ├── ecg_analysis/                    ← Module 2: ECG Signal Analysis
-    ├── ecg_analysis_legacy/             ← Module 2: Legacy ECG code
     ├── cardiac_risk_prediction/         ← Module 3: Risk Prediction
     ├── integrated_clinical_summary/     ← Module 4: Report Summarization
     ├── tele_cardiology/                 ← Module 5: Tele-Cardiology DSS
@@ -204,11 +201,10 @@ cd modules/offline_sync && python ui.py
 1. Create a folder inside `modules/` (e.g., `modules/my_module/`)
 2. Add these files:
    - `__init__.py` → `from .ui import launch`
-   - `database.py` → Import from `shared/database.py` (see Integration Guide)
+   - `database.py` → Import from `shared/database.py`
    - `ui.py` → Tkinter UI with `launch(parent)` function
    - `main.py` → Standalone test entry point
 3. Register your module in `main_app.py`'s `MODULES` list
-4. Read `INTEGRATION_GUIDE_V2.md` for the complete specification
 
 ### Project Root Path Pattern
 
@@ -224,19 +220,18 @@ if PROJECT_ROOT not in sys.path:
 from shared.database import init_db, ...
 ```
 
-### Verifying Integration
+### Data Flow Between Modules
 
-Run the status check script:
-
-```bash
-python _check_status.py
 ```
-
-This will verify:
-- Database initialization
-- All module folders exist
-- Every module has a working `launch()` function
-- All project files are in place
+Module 1 (OCR) → tbl_patients, tbl_reports
+Module 2 (ECG) → tbl_patients, tbl_ecg_data
+Module 3 (Risk) → reads patients+ECG → tbl_ai_predictions, tbl_alerts
+Module 4 (Summary) → reads ALL above → tbl_integrated_summaries
+Module 5 (Tele-Card) → reads patients+ECG+predictions → tbl_telecardiology_decisions
+Module 6 (Alerts) → reads tbl_alerts (from Modules 3 & 5)
+Module 7 (Dashboard) → reads all tables for analytics
+Module 8 (Sync) → tbl_sync_status
+```
 
 ---
 

@@ -185,7 +185,8 @@ def build_ecg_summary(ecg_row):
     return " / ".join(clean)
 
 
-def make_decision(age, blood_pressure, symptoms, ecg_result, risk_score):
+def make_decision(age, blood_pressure, symptoms, ecg_result, risk_score,
+                   module3_risk_level=None):
     systolic, diastolic = parse_blood_pressure(blood_pressure)
     symptoms_l = symptoms.lower()
     ecg_l = ecg_result.lower()
@@ -241,14 +242,39 @@ def make_decision(age, blood_pressure, symptoms, ecg_result, risk_score):
         and (systolic >= 140 or (diastolic is not None and diastolic >= 90))
     )
 
-    if emergency_ecg or hypertensive_crisis or risk_score >= 75:
+    # True life-threatening ECG (always High regardless of ML model)
+    life_threatening_ecg = any(
+        term in ecg_l
+        for term in ["myocardial infarction", "st elevation", "stemi"]
+    )
+
+    # Align with Module 3 when available
+    m3 = (module3_risk_level or "").strip().upper()
+
+    if life_threatening_ecg or hypertensive_crisis:
         urgency = "High"
-    elif severe_symptoms and risk_score >= 50:
+    elif m3 == "HIGH":
         urgency = "High"
-    elif risk_score >= 40 or abnormal_ecg or high_bp or moderate_symptoms or age >= 65:
-        urgency = "Moderate"
+    elif m3 == "MODERATE":
+        if severe_symptoms and risk_score >= 50:
+            urgency = "High"
+        else:
+            urgency = "Moderate"
+    elif m3 == "LOW":
+        if abnormal_ecg or high_bp or moderate_symptoms or age >= 65:
+            urgency = "Moderate"
+        else:
+            urgency = "Low"
     else:
-        urgency = "Low"
+        # No Module 3 data — standalone rules
+        if emergency_ecg or risk_score >= 75:
+            urgency = "High"
+        elif severe_symptoms and risk_score >= 50:
+            urgency = "High"
+        elif risk_score >= 40 or abnormal_ecg or high_bp or moderate_symptoms or age >= 65:
+            urgency = "Moderate"
+        else:
+            urgency = "Low"
 
     if "myocardial infarction" in ecg_l or "st elevation" in ecg_l:
         diagnosis = "Possible acute coronary syndrome or myocardial infarction"
@@ -674,7 +700,11 @@ class TeleCardiologyApp:
         if risk_score is not None:
             self.vars["risk_score"].set(f"{risk_score:.0f}")
 
-        self.saved_var.set(f"Loaded latest DB context for {patient_id}.")
+        # Store Module 3 risk level for consistency
+        self._module3_risk_level = prediction.get("risk_level") if prediction else None
+
+        m3_info = f" (Module 3: {self._module3_risk_level})" if self._module3_risk_level else ""
+        self.saved_var.set(f"Loaded DB context for {patient_id}{m3_info}.")
 
     def _validate_inputs(self):
         patient_name = self.vars["patient_name"].get().strip()
@@ -730,6 +760,7 @@ class TeleCardiologyApp:
             symptoms=data["symptoms"],
             ecg_result=data["ecg_analysis_result"],
             risk_score=data["risk_score"],
+            module3_risk_level=getattr(self, "_module3_risk_level", None),
         )
 
         for key, value in decision.items():

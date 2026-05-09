@@ -13,7 +13,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from xgboost import XGBClassifier
 
-from preprocess import load_data, clean_and_encode, FEATURE_COLUMNS
+try:
+    from .preprocess import load_data, clean_and_encode, FEATURE_COLUMNS
+except ImportError:
+    from preprocess import load_data, clean_and_encode, FEATURE_COLUMNS
 
 MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saved_models")
 LR_MODEL_PATH = os.path.join(MODEL_DIR, "logistic_regression.pkl")

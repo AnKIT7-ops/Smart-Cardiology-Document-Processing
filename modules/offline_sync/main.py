@@ -5,13 +5,22 @@ import time
 import logging
 from pathlib import Path
 
-from database import (
-    fetch_pending_records,
-    mark_as_synced,
-    mark_as_failed,
-    init_db,
-    DB_PATH as LOCAL_DB_PATH,
-)
+try:
+    from .database import (
+        fetch_pending_records,
+        mark_as_synced,
+        mark_as_failed,
+        init_db,
+        DB_PATH as LOCAL_DB_PATH,
+    )
+except ImportError:
+    from database import (
+        fetch_pending_records,
+        mark_as_synced,
+        mark_as_failed,
+        init_db,
+        DB_PATH as LOCAL_DB_PATH,
+    )
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MAIN_DB_PATH  = str(_PROJECT_ROOT / "smart_cardiology.db")
@@ -191,7 +200,10 @@ def scheduler_is_running() -> bool:
 
 
 if __name__ == "__main__":
-    from database import save_offline_record
+    try:
+        from .database import save_offline_record
+    except ImportError:
+        from database import save_offline_record
 
     for mod in ["MODULE_1", "MODULE_2", "MODULE_3"]:
         rid = save_offline_record(mod, device_id="DEV-MANGALURU-01")
