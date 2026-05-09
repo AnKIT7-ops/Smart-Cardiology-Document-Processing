@@ -90,3 +90,5 @@
 2026-05-09 14:04:01,162 [INFO] Saved ECG result ECG-0007: Ventricular Tachycardia
 2026-05-09 14:08:16,860 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
 2026-05-09 14:08:17,144 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\modules\ecg_analysis_legacy\ecg_model.pkl v1.0.0-GBT
+2026-05-09 14:09:13,350 [INFO] Saved ECG result ECG-0008: Normal Sinus Rhythm
+2026-05-09 14:09:47,874 [INFO] Saved ECG result ECG-0009: Normal Sinus Rhythm
