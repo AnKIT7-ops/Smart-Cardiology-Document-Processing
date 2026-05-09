@@ -83,3 +83,10 @@
 2026-05-09 08:14:27,226 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\modules\ecg_analysis_legacy\ecg_model.pkl v1.0.0-GBT
 2026-05-09 08:22:21,930 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
 2026-05-09 08:22:21,966 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\modules\ecg_analysis_legacy\ecg_model.pkl v1.0.0-GBT
+2026-05-09 14:01:11,063 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
+2026-05-09 14:01:11,113 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\modules\ecg_analysis_legacy\ecg_model.pkl v1.0.0-GBT
+2026-05-09 14:02:47,161 [INFO] Saved ECG result ECG-0005: Normal Sinus Rhythm
+2026-05-09 14:03:28,836 [INFO] Saved ECG result ECG-0006: Normal Sinus Rhythm
+2026-05-09 14:04:01,162 [INFO] Saved ECG result ECG-0007: Ventricular Tachycardia
+2026-05-09 14:08:16,860 [INFO] Database ready: c:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\smart_cardiology.db
+2026-05-09 14:08:17,144 [INFO] Model loaded: C:\Users\ankit\OneDrive\Desktop\INTERNSHIP\PROJECT\Smart Cardiology Document Processing\modules\ecg_analysis_legacy\ecg_model.pkl v1.0.0-GBT

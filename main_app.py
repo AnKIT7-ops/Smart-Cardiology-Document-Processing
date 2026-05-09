@@ -135,7 +135,7 @@ class LauncherApp:
         header.pack_propagate(False)
 
         tk.Label(
-            header, text="🫀",
+            header, text="",
             bg=HEADER_BG, font=("Segoe UI", 32),
         ).pack(pady=(14, 0))
 
