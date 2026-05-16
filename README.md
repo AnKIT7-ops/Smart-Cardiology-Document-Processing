@@ -1,114 +1,100 @@
-# 🫀 Smart Cardiology Document Processing
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776ab?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Tkinter-GUI-blue?style=for-the-badge" alt="Tkinter">
+  <img src="https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">
+  <img src="https://img.shields.io/badge/PaddleOCR-AI-red?style=for-the-badge" alt="PaddleOCR">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
+</p>
 
-**AI-powered cardiology document processing system for the Mangaluru/Udupi District Health Network.**
+<h1 align="center">🫀 Smart Cardiology Document Processing</h1>
 
-A desktop application built with Python and Tkinter that processes ECG documents, predicts cardiac risk, generates clinical summaries, and manages patient alerts — all connected through a single shared SQLite database.
-
----
-
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Modules](#modules)
-- [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [Database Architecture](#database-architecture)
-- [Running Individual Modules](#running-individual-modules)
-- [For Developers / Teammates](#for-developers--teammates)
-- [Dependencies](#dependencies)
-- [Tech Stack](#tech-stack)
+<p align="center">
+  <b>AI-powered cardiology document processing system for the Mangaluru / Udupi District Health Network</b><br>
+  <sub>Desktop application • 8 integrated modules • Shared SQLite database • Built with Python & Tkinter</sub>
+</p>
 
 ---
 
-## Overview
+## 📖 Overview
 
-This system is designed to support **6 Primary Health Centers** in the Mangaluru/Udupi district. It processes cardiology data across 8 specialized modules, each handling a different aspect of cardiac care — from document scanning to risk prediction to alert management.
+A comprehensive desktop application that processes ECG documents, predicts cardiac risk, generates clinical summaries, and manages patient alerts — designed to support **6 Primary Health Centers** in the Mangaluru/Udupi district.
 
-**Key Design Principle:** All modules run independently but share data through one central SQLite database (`smart_cardiology.db`). No module imports another module's code directly.
-
----
-
-## Modules
-
-| # | Module | Folder | Description |
-|---|--------|--------|-------------|
-| 1 | **AI Document Processing** | `modules/ocr_nlp/` | Scans medical documents using PaddleOCR, extracts patient info via NLP |
-| 2 | **ECG Signal Analysis AI** | `modules/ecg_analysis/` | Analyzes ECG signals, detects rhythm abnormalities and ST changes |
-| 3 | **Cardiac Risk Prediction** | `modules/cardiac_risk_prediction/` | Predicts heart disease risk using Logistic Regression + XGBoost |
-| 4 | **Report Summarization AI** | `modules/integrated_clinical_summary/` | Aggregates all patient data into unified clinical reports + PDF export |
-| 5 | **Tele-Cardiology Decision Support** | `modules/tele_cardiology/` | Remote cardiac triage with diagnosis, urgency level, and referral suggestions |
-| 6 | **Critical Alert System** | `modules/unified_alert_dashboard/` | Monitors high-risk patients with severity-filtered alert dashboard |
-| 7 | **Analytics Dashboard** | `modules/analytics_dashboard/` | Visual analytics with charts, trends, and center-wise statistics |
-| 8 | **Offline Data Capture & Sync** | `modules/offline_sync/` | Supports rural areas with offline data entry and sync-when-online |
+All modules run independently but share data through one central SQLite database (`smart_cardiology.db`). No module imports another module's code directly.
 
 ---
 
-## Quick Start
+## ✨ Features
+
+- 📄 **AI Document Processing** — Scan medical documents using PaddleOCR + rule-based NLP extraction
+- 💓 **ECG Signal Analysis** — Detect rhythm abnormalities and ST-segment changes
+- 🎯 **Cardiac Risk Prediction** — Logistic Regression + XGBoost on UCI Heart Disease dataset
+- 📋 **Clinical Report Summarization** — Aggregate patient data into unified reports with PDF export
+- 📡 **Tele-Cardiology Decision Support** — Remote triage with diagnosis, urgency, and referral suggestions
+- 🚨 **Critical Alert System** — Severity-filtered real-time alert dashboard
+- 📊 **Analytics Dashboard** — Visual analytics with charts, trends, and center-wise statistics
+- 🔄 **Offline Data Capture & Sync** — Offline data entry for rural areas with sync-when-online
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Python 3.10+** (Tkinter comes built-in)
+- **Python 3.10+** (Tkinter ships built-in)
 - **pip** (Python package manager)
 
 ### Installation
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR-ORG/Smart-Cardiology-Document-Processing.git
+# Clone the repository
+git clone https://github.com/AnKIT7-ops/Smart-Cardiology-Document-Processing.git
 cd Smart-Cardiology-Document-Processing
 
-# 2. Install dependencies
+# Create virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate        # Linux / macOS
+venv\Scripts\activate           # Windows
+
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. Launch the application
+# Launch the application
 python main_app.py
 ```
 
-The launcher will:
-- Initialize the shared database (`smart_cardiology.db`) automatically
-- Show buttons for all 8 modules
-- Open each module in its own window
-
-### Module 1 (OCR) — Extra Setup
-
-Module 1 requires heavy OCR dependencies (~1 GB). Install only if needed:
-
-```bash
-pip install paddlepaddle paddleocr opencv-python PyMuPDF
-```
+> **Note:** The launcher will auto-initialize `smart_cardiology.db` on first run.
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
-Smart Cardiology Document Processing/
+Smart-Cardiology-Document-Processing/
 │
-├── main_app.py                          ← 🚀 MAIN LAUNCHER (run this)
-├── requirements.txt                     ← Python dependencies
-├── README.md                            ← This file
-├── .gitignore                           ← Git ignore rules
-├── heart_disease_uci.csv                ← Training dataset for Module 3
+├── main_app.py                          # 🚀 Main launcher (entry point)
+├── requirements.txt                     # Python dependencies
+├── heart_disease_uci.csv                # Training dataset (Module 3)
+├── LICENSE                              # MIT License
 │
-├── shared/                              ← Shared database layer
+├── shared/                              # Shared integration layer
 │   ├── __init__.py
-│   └── database.py                      ← All tables, helpers, CRUD functions
+│   └── database.py                      # Tables, helpers, CRUD functions
 │
-└── modules/                             ← All 8 application modules
+└── modules/                             # All 8 application modules
     ├── __init__.py
-    ├── ocr_nlp/                         ← Module 1: OCR + NLP
-    ├── ecg_analysis/                    ← Module 2: ECG Signal Analysis
-    ├── cardiac_risk_prediction/         ← Module 3: Risk Prediction
-    ├── integrated_clinical_summary/     ← Module 4: Report Summarization
-    ├── tele_cardiology/                 ← Module 5: Tele-Cardiology DSS
-    ├── unified_alert_dashboard/         ← Module 6: Alert Dashboard
-    ├── analytics_dashboard/             ← Module 7: Analytics Dashboard
-    └── offline_sync/                    ← Module 8: Offline Sync
+    ├── ocr_nlp/                         # Module 1: AI Document Processing
+    ├── ecg_analysis/                    # Module 2: ECG Signal Analysis
+    ├── cardiac_risk_prediction/         # Module 3: Risk Prediction
+    ├── integrated_clinical_summary/     # Module 4: Report Summarization
+    ├── tele_cardiology/                 # Module 5: Tele-Cardiology DSS
+    ├── unified_alert_dashboard/         # Module 6: Critical Alert System
+    ├── analytics_dashboard/             # Module 7: Analytics Dashboard
+    └── offline_sync/                    # Module 8: Offline Data Sync
 ```
 
 ---
 
-## Database Architecture
+## 🗄️ Database Architecture
 
 All modules communicate through **one SQLite database** with 9 tables:
 
@@ -141,7 +127,7 @@ All modules communicate through **one SQLite database** with 9 tables:
 | Table | Owner | Purpose |
 |-------|-------|---------|
 | `tbl_centers` | Pre-populated | 6 health centers (CEN-001 to CEN-006) |
-| `tbl_patients` | All modules | Patient demographics (P-0001 format) |
+| `tbl_patients` | All modules | Patient demographics (P-XXXX format) |
 | `tbl_reports` | Module 1 | OCR-extracted document text |
 | `tbl_ecg_data` | Module 2 | ECG analysis results |
 | `tbl_ai_predictions` | Module 3 | Risk prediction scores |
@@ -152,126 +138,22 @@ All modules communicate through **one SQLite database** with 9 tables:
 
 ---
 
-## Running Individual Modules
+## 🔄 Data Flow
 
-Each module can also run standalone for testing:
-
-```bash
-# Module 1 — OCR + NLP
-cd modules/ocr_nlp && python main.py
-
-# Module 2 — ECG Analysis
-cd modules/ecg_analysis && python main.py
-
-# Module 3 — Cardiac Risk Prediction
-cd modules/cardiac_risk_prediction && python main.py
-
-# Module 4 — Report Summarization
-cd modules/integrated_clinical_summary && python main.py
-
-# Module 5 — Tele-Cardiology
-cd modules/tele_cardiology && python tele_cardiology_decision_support.py
-
-# Module 6 — Alert Dashboard
-cd modules/unified_alert_dashboard && python main.py
-
-# Module 7 — Analytics Dashboard
-cd modules/analytics_dashboard && python main.py
-
-# Module 8 — Offline Sync
-cd modules/offline_sync && python ui.py
+```
+Module 1 (OCR)      → tbl_patients, tbl_reports
+Module 2 (ECG)      → tbl_patients, tbl_ecg_data
+Module 3 (Risk)     → reads patients + ECG → tbl_ai_predictions, tbl_alerts
+Module 4 (Summary)  → reads ALL above → tbl_integrated_summaries
+Module 5 (Tele)     → reads patients + ECG + predictions → tbl_telecardiology_decisions
+Module 6 (Alerts)   → reads tbl_alerts (from Modules 3 & 5)
+Module 7 (Dashboard)→ reads all tables for analytics
+Module 8 (Sync)     → tbl_sync_status
 ```
 
 ---
 
-## For Developers / Teammates
-
-### Integration Rules
-
-1. **Never import another module's code directly.** Use the shared database.
-2. **Use `shared/database.py`** for all DB operations — don't create your own tables.
-3. **Patient ID format:** `P-XXXX` (e.g., `P-0001`)
-4. **Center IDs:** `CEN-001` through `CEN-006`
-5. **Timestamps:** Always use `now_text()` → `"2026-05-06 14:30:00"`
-6. **Your UI must use `Toplevel(parent)`**, not standalone `Tk()`
-7. **Export a `launch(parent)` function** in your module's `ui.py`
-
-### Adding a New Module
-
-1. Create a folder inside `modules/` (e.g., `modules/my_module/`)
-2. Add these files:
-   - `__init__.py` → `from .ui import launch`
-   - `database.py` → Import from `shared/database.py`
-   - `ui.py` → Tkinter UI with `launch(parent)` function
-   - `main.py` → Standalone test entry point
-3. Register your module in `main_app.py`'s `MODULES` list
-
-### Project Root Path Pattern
-
-Since modules are inside `modules/<folder>/`, use **3 levels of dirname** to reach the project root:
-
-```python
-import os, sys
-
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
-
-from shared.database import init_db, ...
-```
-
-### Data Flow Between Modules
-
-```
-Module 1 (OCR) → tbl_patients, tbl_reports
-Module 2 (ECG) → tbl_patients, tbl_ecg_data
-Module 3 (Risk) → reads patients+ECG → tbl_ai_predictions, tbl_alerts
-Module 4 (Summary) → reads ALL above → tbl_integrated_summaries
-Module 5 (Tele-Card) → reads patients+ECG+predictions → tbl_telecardiology_decisions
-Module 6 (Alerts) → reads tbl_alerts (from Modules 3 & 5)
-Module 7 (Dashboard) → reads all tables for analytics
-Module 8 (Sync) → tbl_sync_status
-```
-
----
-
-## Dependencies
-
-### Required (all modules)
-
-```
-numpy, pandas, matplotlib, scikit-learn, xgboost, reportlab
-```
-
-### Optional (Module 1 only)
-
-```
-paddlepaddle, paddleocr, opencv-python, PyMuPDF
-```
-
-Install everything:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Language | Python 3.10+ |
-| GUI Framework | Tkinter (built-in) |
-| Database | SQLite3 (file-based, zero-config) |
-| ML Models | scikit-learn, XGBoost |
-| OCR Engine | PaddleOCR |
-| Charts | Matplotlib |
-| PDF Export | ReportLab |
-
----
-
-## Health Centers
+## 🏥 Health Centers
 
 | ID | Center | District |
 |----|--------|----------|
@@ -284,6 +166,48 @@ pip install -r requirements.txt
 
 ---
 
-## License
+## 🛠️ Tech Stack
 
-This project is developed as part of an internship program for the CAD Foundation's Smart Cardiology initiative.
+| Layer | Technology |
+|-------|------------|
+| Language | Python 3.10+ |
+| GUI Framework | Tkinter (built-in) |
+| Database | SQLite3 (file-based, zero-config) |
+| ML Models | scikit-learn, XGBoost |
+| OCR Engine | PaddleOCR |
+| Charts | Matplotlib |
+| PDF Export | ReportLab |
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/your-feature`)
+3. **Commit** your changes (`git commit -m "Add your feature"`)
+4. **Push** to the branch (`git push origin feature/your-feature`)
+5. **Open** a Pull Request
+
+### Module Development Rules
+
+- Never import another module's code directly — use the shared database
+- Use `shared/database.py` for all DB operations
+- Patient ID format: `P-XXXX` (e.g., `P-0001`)
+- Center IDs: `CEN-001` through `CEN-006`
+- Your UI must use `Toplevel(parent)`, not standalone `Tk()`
+- Export a `launch(parent)` function in your module's `__init__.py`
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+<p align="center">
+  Developed as part of the <b>CAD Foundation's Smart Cardiology Initiative</b><br>
+  <sub>Internship Program — Mangaluru / Udupi District Health Network</sub>
+</p>

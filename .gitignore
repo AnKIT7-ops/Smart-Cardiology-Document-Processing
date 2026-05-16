@@ -2,18 +2,32 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyd
+*.egg
 *.egg-info/
 dist/
 build/
-*.egg
+*.whl
+
+# ── Virtual Environments ───────────────────────────────────
+venv/
+.venv/
+env/
+.env/
 
 # ── Databases (auto-generated at runtime) ──────────────────
 *.db
 *.db-shm
 *.db-wal
+*.sqlite3
 
-# ── ML model cache ─────────────────────────────────────────
-modules/cardiac_risk_prediction/*.pkl
+# ── ML Model Artifacts ────────────────────────────────────
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+saved_models/
 
 # ── IDE / Editor ───────────────────────────────────────────
 .vscode/
@@ -21,13 +35,19 @@ modules/cardiac_risk_prediction/*.pkl
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 
-# ── OS files ───────────────────────────────────────────────
+# ── OS Files ───────────────────────────────────────────────
 Thumbs.db
+Desktop.ini
 .DS_Store
 ~$*
 
-# ── Virtual environments ───────────────────────────────────
-venv/
-.venv/
-env/
+# ── Logs ───────────────────────────────────────────────────
+*.log
+
+# ── Temporary Files ───────────────────────────────────────
+*.tmp
+*.bak
+tempCodeRunnerFile.py

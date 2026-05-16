@@ -100,14 +100,19 @@ class OCRProcessor:
         return lines
 
     def _run_ocr(self, img: np.ndarray) -> list[tuple[str, float]]:
-        result = self._ocr.ocr(img, cls=True)
+        # PaddleOCR v3.5+: .predict() returns list of OCRResult dicts
+        # with keys 'rec_texts' (list[str]) and 'rec_scores' (list[float])
+        result = self._ocr.predict(img)
         lines: list[tuple[str, float]] = []
-        if result and result[0]:
-            for line in result[0]:
-                text: str = line[1][0].strip()
-                conf: float = float(line[1][1])
+        if not result:
+            return lines
+        for page in result:
+            texts = page.get("rec_texts", [])
+            scores = page.get("rec_scores", [])
+            for text, conf in zip(texts, scores):
+                text = text.strip()
                 if text:
-                    lines.append((text, conf))
+                    lines.append((text, float(conf)))
         return lines
 
 
