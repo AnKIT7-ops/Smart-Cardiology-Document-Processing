@@ -3,7 +3,6 @@
   <img src="https://img.shields.io/badge/Tkinter-GUI-blue?style=for-the-badge" alt="Tkinter">
   <img src="https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">
   <img src="https://img.shields.io/badge/PaddleOCR-AI-red?style=for-the-badge" alt="PaddleOCR">
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
 </p>
 
 <h1 align="center">🫀 Smart Cardiology Document Processing</h1>
@@ -74,7 +73,6 @@ Smart-Cardiology-Document-Processing/
 ├── main_app.py                          # 🚀 Main launcher (entry point)
 ├── requirements.txt                     # Python dependencies
 ├── heart_disease_uci.csv                # Training dataset (Module 3)
-├── LICENSE                              # MIT License
 │
 ├── shared/                              # Shared integration layer
 │   ├── __init__.py
@@ -180,30 +178,9 @@ Module 8 (Sync)     → tbl_sync_status
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/your-feature`)
-3. **Commit** your changes (`git commit -m "Add your feature"`)
-4. **Push** to the branch (`git push origin feature/your-feature`)
-5. **Open** a Pull Request
-
-### Module Development Rules
-
-- Never import another module's code directly — use the shared database
-- Use `shared/database.py` for all DB operations
-- Patient ID format: `P-XXXX` (e.g., `P-0001`)
-- Center IDs: `CEN-001` through `CEN-006`
-- Your UI must use `Toplevel(parent)`, not standalone `Tk()`
-- Export a `launch(parent)` function in your module's `__init__.py`
-
----
-
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is developed as part of the **CAD Foundation's Smart Cardiology Initiative** — Internship Program.
 
 ---
 
